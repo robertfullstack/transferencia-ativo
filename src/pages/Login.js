@@ -1,23 +1,37 @@
 import { useState } from "react";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "../firebaseConfig";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const [nome, setNome] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
-    const usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
-    const usuarioValido = usuarios.find(
-      (u) => u.nome === nome && u.senha === senha
-    );
+    try {
+      const q = query(
+        collection(db, "usuarios"),
+        where("nome", "==", nome),
+        where("senha", "==", senha)
+      );
+      const querySnapshot = await getDocs(q);
 
-    if (usuarioValido) {
-      alert("✅ Login realizado com sucesso!");
-      setErro("");
-    } else {
-      setErro("Usuário ou senha incorretos");
+      if (querySnapshot.empty) {
+        setErro("Usuário ou senha inválidos");
+      } else {
+        const userData = querySnapshot.docs[0].data();
+        localStorage.setItem("usuarioNome", userData.nome);
+        localStorage.setItem("usuarioCategoria", userData.categoria);
+
+        navigate("/home"); // depois ele pode ir pra /Solicitar
+      }
+    } catch (error) {
+      console.error(error);
+      setErro("Erro ao fazer login!");
     }
   };
 
@@ -34,36 +48,32 @@ export default function Login() {
       }}
     >
       <form
-        onSubmit={handleSubmit}
+        onSubmit={handleLogin}
         style={{
           backgroundColor: "#f7f7f7",
           padding: "40px",
           borderRadius: "12px",
-          boxShadow: "0 0 25px rgba(0, 0, 0, 0.1)",
           width: "340px",
           textAlign: "center",
+          boxShadow: "0 0 20px rgba(0,0,0,0.1)",
           border: "1px solid #ddd",
         }}
       >
-        <h2 style={{ marginBottom: "20px", fontSize: "22px" }}>Login</h2>
+        <h2 style={{ marginBottom: "25px" }}>Login do Sistema</h2>
 
         <input
           type="text"
-          placeholder="Usuário"
+          placeholder="Nome de usuário"
           value={nome}
           onChange={(e) => setNome(e.target.value)}
           style={{
             width: "100%",
             padding: "12px",
-            marginTop: "10px",
+            marginBottom: "10px",
             borderRadius: "6px",
             border: "1px solid #aaa",
-            backgroundColor: "#fff",
-            color: "#000",
-            fontSize: "15px",
           }}
         />
-
         <input
           type="password"
           placeholder="Senha"
@@ -72,24 +82,14 @@ export default function Login() {
           style={{
             width: "100%",
             padding: "12px",
-            marginTop: "10px",
+            marginBottom: "10px",
             borderRadius: "6px",
             border: "1px solid #aaa",
-            backgroundColor: "#fff",
-            color: "#000",
-            fontSize: "15px",
           }}
         />
 
         {erro && (
-          <p
-            style={{
-              color: "#d33",
-              fontSize: "14px",
-              marginTop: "10px",
-              fontWeight: "bold",
-            }}
-          >
+          <p style={{ color: "#d33", fontWeight: "bold", marginBottom: "10px" }}>
             {erro}
           </p>
         )}
@@ -99,18 +99,13 @@ export default function Login() {
           style={{
             width: "100%",
             padding: "12px",
-            marginTop: "20px",
             borderRadius: "6px",
             border: "none",
             backgroundColor: "#000",
             color: "#fff",
             fontWeight: "bold",
             cursor: "pointer",
-            transition: "0.3s",
-            fontSize: "15px",
           }}
-          onMouseOver={(e) => (e.target.style.backgroundColor = "#333")}
-          onMouseOut={(e) => (e.target.style.backgroundColor = "#000")}
         >
           Entrar
         </button>

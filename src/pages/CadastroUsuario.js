@@ -1,27 +1,22 @@
-import { useState } from "react";
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { FaUserPlus, FaUsers, FaArrowLeft } from "react-icons/fa";
 
 export default function CadastroUsuario() {
-  const [nome, setNome] = useState("");
-  const [senha, setSenha] = useState("");
-  const [mensagem, setMensagem] = useState("");
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    if (!nome || !senha) {
-      setMensagem("⚠️ Preencha todos os campos!");
-      return;
-    }
-
-    // Salvando no localStorage (simulando banco)
-    const usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
-    usuarios.push({ nome, senha });
-    localStorage.setItem("usuarios", JSON.stringify(usuarios));
-
-    setMensagem("✅ Usuário cadastrado com sucesso!");
-    setNome("");
-    setSenha("");
-  };
+  const opcoes = [
+    {
+      titulo: "Adicionar Usuário",
+      icone: <FaUserPlus size={32} color="#000" />,
+      rota: "/admin/novo-usuario",
+    },
+    {
+      titulo: "Listar Usuários",
+      icone: <FaUsers size={32} color="#000" />,
+      rota: "/admin/listar-usuarios",
+    },
+  ];
 
   return (
     <div
@@ -30,95 +25,73 @@ export default function CadastroUsuario() {
         color: "#000",
         height: "100vh",
         display: "flex",
-        justifyContent: "center",
+        flexDirection: "column",
         alignItems: "center",
+        justifyContent: "center",
         fontFamily: "Arial, sans-serif",
       }}
     >
-      <form
-        onSubmit={handleSubmit}
+      <h1 style={{ marginBottom: "40px", fontSize: "26px" }}>Gerenciar Usuários</h1>
+
+      <div
         style={{
-          backgroundColor: "#f7f7f7",
-          padding: "40px",
-          borderRadius: "12px",
-          boxShadow: "0 0 25px rgba(0, 0, 0, 0.1)",
-          width: "340px",
-          textAlign: "center",
-          border: "1px solid #ddd",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+          gap: "20px",
+          width: "80%",
+          maxWidth: "600px",
         }}
       >
-        <h2 style={{ marginBottom: "20px", fontSize: "22px" }}>
-          Cadastrar Usuário
-        </h2>
-
-        <input
-          type="text"
-          placeholder="Nome de usuário"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "12px",
-            marginTop: "10px",
-            borderRadius: "6px",
-            border: "1px solid #aaa",
-            backgroundColor: "#fff",
-            color: "#000",
-            fontSize: "15px",
-          }}
-        />
-
-        <input
-          type="password"
-          placeholder="Senha"
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "12px",
-            marginTop: "10px",
-            borderRadius: "6px",
-            border: "1px solid #aaa",
-            backgroundColor: "#fff",
-            color: "#000",
-            fontSize: "15px",
-          }}
-        />
-
-        <button
-          type="submit"
-          style={{
-            width: "100%",
-            padding: "12px",
-            marginTop: "20px",
-            borderRadius: "6px",
-            border: "none",
-            backgroundColor: "#000",
-            color: "#fff",
-            fontWeight: "bold",
-            cursor: "pointer",
-            transition: "0.3s",
-            fontSize: "15px",
-          }}
-          onMouseOver={(e) => (e.target.style.backgroundColor = "#333")}
-          onMouseOut={(e) => (e.target.style.backgroundColor = "#000")}
-        >
-          Cadastrar
-        </button>
-
-        {mensagem && (
-          <p
+        {opcoes.map((opcao, index) => (
+          <div
+            key={index}
+            onClick={() => navigate(opcao.rota)}
             style={{
-              marginTop: "15px",
-              fontSize: "14px",
-              fontWeight: "bold",
-              color: mensagem.includes("✅") ? "green" : "red",
+              backgroundColor: "#f7f7f7",
+              borderRadius: "12px",
+              boxShadow: "0 0 10px rgba(0,0,0,0.1)",
+              padding: "25px",
+              textAlign: "center",
+              cursor: "pointer",
+              transition: "0.3s",
+              border: "1px solid #ddd",
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = "#000";
+              e.currentTarget.style.color = "#fff";
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = "#f7f7f7";
+              e.currentTarget.style.color = "#000";
             }}
           >
-            {mensagem}
-          </p>
-        )}
-      </form>
+            <div style={{ marginBottom: "10px" }}>{opcao.icone}</div>
+            <p style={{ fontSize: "15px", fontWeight: "bold" }}>{opcao.titulo}</p>
+          </div>
+        ))}
+      </div>
+
+      <button
+        onClick={() => navigate("/admin")}
+        style={{
+          marginTop: "40px",
+          padding: "12px 30px",
+          borderRadius: "6px",
+          border: "none",
+          backgroundColor: "#000",
+          color: "#fff",
+          fontWeight: "bold",
+          cursor: "pointer",
+          transition: "0.3s",
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+        }}
+        onMouseOver={(e) => (e.target.style.backgroundColor = "#333")}
+        onMouseOut={(e) => (e.target.style.backgroundColor = "#000")}
+      >
+        <FaArrowLeft /> Voltar
+      </button>
     </div>
   );
 }
