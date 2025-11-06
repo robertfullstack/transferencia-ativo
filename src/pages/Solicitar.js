@@ -5,21 +5,26 @@ import { db } from "../firebaseConfig";
 export default function Solicitar() {
   const [usuario, setUsuario] = useState("");
   const [categoria, setCategoria] = useState("");
+  const [loja, setLoja] = useState("");
   const [origem, setOrigem] = useState("");
   const [destino, setDestino] = useState("");
   const [valor, setValor] = useState("");
   const [mensagem, setMensagem] = useState("");
 
   useEffect(() => {
+    // Pegando dados salvos no login
     const nome = localStorage.getItem("usuarioNome");
     const cat = localStorage.getItem("usuarioCategoria");
+    const lj = localStorage.getItem("usuarioLoja");
     if (nome) setUsuario(nome);
     if (cat) setCategoria(cat);
+    if (lj) setLoja(lj);
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!usuario || !origem || !destino || !valor) {
+
+    if (!usuario || !loja || !origem || !destino || !valor) {
       setMensagem("⚠️ Preencha todos os campos!");
       return;
     }
@@ -28,6 +33,7 @@ export default function Solicitar() {
       await addDoc(collection(db, "solicitacoes"), {
         usuario,
         categoria,
+        loja,
         origem,
         destino,
         valor,
@@ -70,6 +76,7 @@ export default function Solicitar() {
       >
         <h2 style={{ marginBottom: "20px" }}>Solicitar Transferência</h2>
 
+        {/* Nome */}
         <input
           type="text"
           value={usuario}
@@ -85,6 +92,7 @@ export default function Solicitar() {
           }}
         />
 
+        {/* Categoria */}
         <input
           type="text"
           value={categoria}
@@ -100,6 +108,23 @@ export default function Solicitar() {
           }}
         />
 
+        {/* Loja */}
+        <input
+          type="text"
+          value={loja}
+          disabled
+          style={{
+            width: "100%",
+            padding: "12px",
+            marginBottom: "10px",
+            borderRadius: "6px",
+            border: "1px solid #aaa",
+            backgroundColor: "#eee",
+            fontWeight: "bold",
+          }}
+        />
+
+        {/* Origem */}
         <input
           type="text"
           placeholder="Origem"
@@ -113,6 +138,8 @@ export default function Solicitar() {
             border: "1px solid #aaa",
           }}
         />
+
+        {/* Destino */}
         <input
           type="text"
           placeholder="Destino"
@@ -126,6 +153,8 @@ export default function Solicitar() {
             border: "1px solid #aaa",
           }}
         />
+
+        {/* Valor */}
         <input
           type="number"
           placeholder="Valor"

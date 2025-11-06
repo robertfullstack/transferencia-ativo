@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import { useNavigate } from "react-router-dom";
 
@@ -13,25 +13,29 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const q = query(
-        collection(db, "usuarios"),
-        where("nome", "==", nome),
-        where("senha", "==", senha)
-      );
-      const querySnapshot = await getDocs(q);
+      const querySnapshot = await getDocs(collection(db, "usuarios"));
+      let usuarioEncontrado = null;
 
-      if (querySnapshot.empty) {
-        setErro("Usuário ou senha inválidos");
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.nome === nome && data.senha === senha) {
+          usuarioEncontrado = data;
+        }
+      });
+
+      if (usuarioEncontrado) {
+        // ✅ Salva tudo no localStorage
+        localStorage.setItem("usuarioNome", usuarioEncontrado.nome);
+        localStorage.setItem("usuarioCategoria", usuarioEncontrado.categoria);
+        localStorage.setItem("usuarioLoja", usuarioEncontrado.loja);
+
+        navigate("/home"); // redireciona após login
       } else {
-        const userData = querySnapshot.docs[0].data();
-        localStorage.setItem("usuarioNome", userData.nome);
-        localStorage.setItem("usuarioCategoria", userData.categoria);
-
-        navigate("/home"); // depois ele pode ir pra /Solicitar
+        setErro("Usuário ou senha inválidos!");
       }
     } catch (error) {
-      console.error(error);
-      setErro("Erro ao fazer login!");
+      console.error("Erro ao buscar usuários:", error);
+      setErro("Erro ao conectar ao servidor!");
     }
   };
 
@@ -39,7 +43,6 @@ export default function Login() {
     <div
       style={{
         backgroundColor: "#fff",
-        color: "#000",
         height: "100vh",
         display: "flex",
         justifyContent: "center",
@@ -53,17 +56,17 @@ export default function Login() {
           backgroundColor: "#f7f7f7",
           padding: "40px",
           borderRadius: "12px",
-          width: "340px",
+          width: "360px",
           textAlign: "center",
-          boxShadow: "0 0 20px rgba(0,0,0,0.1)",
+          boxShadow: "0 0 15px rgba(0,0,0,0.1)",
           border: "1px solid #ddd",
         }}
       >
-        <h2 style={{ marginBottom: "25px" }}>Login do Sistema</h2>
+        <h2 style={{ marginBottom: "20px" }}>Login</h2>
 
         <input
           type="text"
-          placeholder="Nome de usuário"
+          placeholder="Usuário"
           value={nome}
           onChange={(e) => setNome(e.target.value)}
           style={{
@@ -74,6 +77,7 @@ export default function Login() {
             border: "1px solid #aaa",
           }}
         />
+
         <input
           type="password"
           placeholder="Senha"
@@ -89,7 +93,14 @@ export default function Login() {
         />
 
         {erro && (
-          <p style={{ color: "#d33", fontWeight: "bold", marginBottom: "10px" }}>
+          <p
+            style={{
+              color: "#d33",
+              fontWeight: "bold",
+              fontSize: "14px",
+              marginTop: "5px",
+            }}
+          >
             {erro}
           </p>
         )}
