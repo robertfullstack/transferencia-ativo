@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  updateDoc,
+  doc,
+} from "firebase/firestore";
 import { db } from "../firebaseConfig";
 
 export default function Consultar() {
@@ -10,7 +17,7 @@ export default function Consultar() {
 
   useEffect(() => {
     const nomeUsuario = localStorage.getItem("usuarioNome");
-    const categoriaUsuario = localStorage.getItem("usuarioCategoria"); // pega o perfil
+    const categoriaUsuario = localStorage.getItem("usuarioCategoria");
     setUsuario(nomeUsuario);
     setCategoria(categoriaUsuario);
 
@@ -26,11 +33,9 @@ export default function Consultar() {
       const solicitacoesRef = collection(db, "solicitacoes");
       let q;
 
-      // 🔑 Se o usuário for "Supervisor", vê todas as solicitações
       if (categoriaUsuario === "Supervisor") {
-        q = query(solicitacoesRef);
+        q = query(solicitacoesRef); // Supervisor vê tudo
       } else {
-        // Caso contrário, só vê as próprias
         q = query(solicitacoesRef, where("usuario", "==", nomeUsuario));
       }
 
@@ -45,6 +50,22 @@ export default function Consultar() {
       console.error("Erro ao buscar solicitações:", error);
     } finally {
       setCarregando(false);
+    }
+  };
+
+  const atualizarStatus = async (id, novoStatus) => {
+    try {
+      const ref = doc(db, "solicitacoes", id);
+      await updateDoc(ref, { status: novoStatus });
+
+      // Atualiza na tela sem precisar recarregar tudo
+      setSolicitacoes((prev) =>
+        prev.map((s) =>
+          s.id === id ? { ...s, status: novoStatus } : s
+        )
+      );
+    } catch (error) {
+      console.error("Erro ao atualizar status:", error);
     }
   };
 
@@ -133,7 +154,7 @@ export default function Consultar() {
                         ? "orange"
                         : s.status === "Aprovado"
                         ? "green"
-                        : "gray",
+                        : "red",
                     fontWeight: "bold",
                   }}
                 >
@@ -146,6 +167,47 @@ export default function Consultar() {
                   ? new Date(s.data.seconds * 1000).toLocaleString()
                   : "—"}
               </p>
+
+              {/* ✅ Botões só aparecem se for supervisor */}
+              {categoria === "Supervisor" && (
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    gap: "10px",
+                    marginTop: "10px",
+                  }}
+                >
+                  <button
+                    onClick={() => atualizarStatus(s.id, "Aprovado")}
+                    style={{
+                      backgroundColor: "green",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: "6px",
+                      padding: "8px 14px",
+                      cursor: "pointer",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    ✅ Aprovar
+                  </button>
+                  <button
+                    onClick={() => atualizarStatus(s.id, "Reprovado")}
+                    style={{
+                      backgroundColor: "red",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: "6px",
+                      padding: "8px 14px",
+                      cursor: "pointer",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    ❌ Reprovar
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
