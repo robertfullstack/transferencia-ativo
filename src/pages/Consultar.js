@@ -5,25 +5,36 @@ import { db } from "../firebaseConfig";
 export default function Consultar() {
   const [solicitacoes, setSolicitacoes] = useState([]);
   const [usuario, setUsuario] = useState("");
+  const [categoria, setCategoria] = useState("");
   const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
     const nomeUsuario = localStorage.getItem("usuarioNome");
+    const categoriaUsuario = localStorage.getItem("usuarioCategoria"); // pega o perfil
     setUsuario(nomeUsuario);
+    setCategoria(categoriaUsuario);
 
     if (nomeUsuario) {
-      carregarSolicitacoes(nomeUsuario);
+      carregarSolicitacoes(nomeUsuario, categoriaUsuario);
     } else {
       setCarregando(false);
     }
   }, []);
 
-  const carregarSolicitacoes = async (nomeUsuario) => {
+  const carregarSolicitacoes = async (nomeUsuario, categoriaUsuario) => {
     try {
       const solicitacoesRef = collection(db, "solicitacoes");
-      const q = query(solicitacoesRef, where("usuario", "==", nomeUsuario));
-      const querySnapshot = await getDocs(q);
+      let q;
 
+      // 🔑 Se o usuário for "Supervisor", vê todas as solicitações
+      if (categoriaUsuario === "Supervisor") {
+        q = query(solicitacoesRef);
+      } else {
+        // Caso contrário, só vê as próprias
+        q = query(solicitacoesRef, where("usuario", "==", nomeUsuario));
+      }
+
+      const querySnapshot = await getDocs(q);
       const lista = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -66,7 +77,9 @@ export default function Consultar() {
       }}
     >
       <h1 style={{ textAlign: "center", marginBottom: "25px" }}>
-        Minhas Solicitações
+        {categoria === "Supervisor"
+          ? "Todas as Solicitações"
+          : "Minhas Solicitações"}
       </h1>
 
       {solicitacoes.length === 0 ? (
