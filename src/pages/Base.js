@@ -112,11 +112,12 @@ const Base = () => {
           </p>
         </div>
       ) : (
-        barcodeQuery && !loading && <p>Nenhum item encontrado.</p>
+        barcodeQuery && !loading && <p>Nenhum item encontrado..</p>
       )}
     </div>
   );
 };
+
 
 const styles = {
   container: {
