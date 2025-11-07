@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import * as XLSX from "xlsx";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 
 export default function Solicitar() {
@@ -13,8 +12,8 @@ export default function Solicitar() {
   const [codigoBarras, setCodigoBarras] = useState("");
   const [produto, setProduto] = useState(null);
   const [mensagem, setMensagem] = useState("");
-  const [dadosExcel, setDadosExcel] = useState([]);
 
+  // ======== CARREGA DADOS DO USUÁRIO ========
   useEffect(() => {
     const nome = localStorage.getItem("usuarioNome");
     const cat = localStorage.getItem("usuarioCategoria");
@@ -22,49 +21,42 @@ export default function Solicitar() {
     if (nome) setUsuario(nome);
     if (cat) setCategoria(cat);
     if (lj) setLoja(lj);
-
-    // Carrega a planilha Excel automaticamente ao iniciar
-    carregarPlanilha();
   }, []);
 
-  // Lê o arquivo Excel do projeto (ex: public/produtos.xlsx)
-  const carregarPlanilha = async () => {
-    try {
-      const response = await fetch("/produtos.xlsx"); // Coloque o arquivo em /public
-      const arrayBuffer = await response.arrayBuffer();
-      const workbook = XLSX.read(arrayBuffer, { type: "array" });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); // Matriz (array de arrays)
-      setDadosExcel(json);
-    } catch (error) {
-      console.error("Erro ao carregar planilha:", error);
-    }
-  };
+  // ======== CONSULTA PRODUTO PELO CÓDIGO DE BARRAS ========
+  useEffect(() => {
+    const buscarProduto = async () => {
+      if (!codigoBarras.trim()) {
+        setProduto(null);
+        return;
+      }
 
-  const buscarProdutoPorCodigo = () => {
-    if (!codigoBarras.trim() || dadosExcel.length === 0) return;
+      try {
+        const querySnapshot = await getDocs(collection(db, "produtos"));
+        const produtos = querySnapshot.docs.map((doc) => doc.data());
 
-    // Começa da linha 1 (ignorando o cabeçalho)
-    const encontrado = dadosExcel.find((linha, index) => index > 0 && linha[1] === codigoBarras);
+        // procura o produto pelo campo "codigo"
+        const encontrado = produtos.find(
+          (p) => String(p.codigo) === String(codigoBarras).trim()
+        );
 
-    if (encontrado) {
-      // Supondo estrutura: [Nome, CódigoBarras, Descrição, Estoque, Valor]
-      const produtoInfo = {
-        nome: encontrado[0],
-        codigoBarras: encontrado[1],
-        descricao: encontrado[2],
-        estoque: encontrado[3],
-        preco: encontrado[4],
-      };
-      setProduto(produtoInfo);
-      setMensagem("✅ Produto encontrado!");
-    } else {
-      setProduto(null);
-      setMensagem("⚠️ Produto não encontrado na planilha!");
-    }
-  };
+        if (encontrado) {
+          setProduto(encontrado);
+          setMensagem("✅ Produto encontrado!");
+        } else {
+          setProduto(null);
+          setMensagem("⚠️ Produto não encontrado!");
+        }
+      } catch (error) {
+        console.error("Erro ao consultar produto:", error);
+        setMensagem("❌ Erro ao consultar produto.");
+      }
+    };
 
+    buscarProduto();
+  }, [codigoBarras]);
+
+  // ======== ENVIAR SOLICITAÇÃO ========
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -79,13 +71,14 @@ export default function Solicitar() {
         categoria,
         loja,
         codigoBarras,
-        produto: produto ? produto.nome : "Produto não encontrado",
+        produto: produto ? produto.descricao || produto.codigo : "Produto não encontrado",
         origem,
         destino,
         valor,
         status: "Pendente",
         data: new Date(),
       });
+
       setMensagem("✅ Solicitação enviada com sucesso!");
       setOrigem("");
       setDestino("");
@@ -124,26 +117,20 @@ export default function Solicitar() {
       >
         <h2 style={{ marginBottom: "20px" }}>Solicitar Transferência</h2>
 
-        {/* Nome */}
         <input type="text" value={usuario} disabled style={inputEstilo(true)} />
-
-        {/* Categoria */}
         <input type="text" value={categoria} disabled style={inputEstilo(true)} />
-
-        {/* Loja */}
         <input type="text" value={loja} disabled style={inputEstilo(true)} />
 
         {/* Código de Barras */}
         <input
           type="text"
-          placeholder="Código de Barras do Produto/Item"
+          placeholder="Código de Barras do Produto"
           value={codigoBarras}
           onChange={(e) => setCodigoBarras(e.target.value)}
-          onBlur={buscarProdutoPorCodigo}
           style={inputEstilo()}
         />
 
-        {/* Exibir info do produto */}
+        {/* Mostrar informações do produto */}
         {produto && (
           <div
             style={{
@@ -155,14 +142,12 @@ export default function Solicitar() {
               fontSize: "14px",
             }}
           >
-            <strong>Produto:</strong> {produto.nome} <br />
-            <strong>Descrição:</strong> {produto.descricao || "—"} <br />
-            <strong>Estoque:</strong> {produto.estoque || "—"} <br />
-            <strong>Preço:</strong> {produto.preco || "—"}
+            <strong>Código:</strong> {produto.codigo} <br />
+            <strong>Descrição:</strong> {produto.descricao || "—"}
           </div>
         )}
 
-        {/* Origem */}
+        {/* Origem / Destino / Valor */}
         <input
           type="text"
           placeholder="Origem"
@@ -170,8 +155,6 @@ export default function Solicitar() {
           onChange={(e) => setOrigem(e.target.value)}
           style={inputEstilo()}
         />
-
-        {/* Destino */}
         <input
           type="text"
           placeholder="Destino"
@@ -179,8 +162,6 @@ export default function Solicitar() {
           onChange={(e) => setDestino(e.target.value)}
           style={inputEstilo()}
         />
-
-        {/* Valor */}
         <input
           type="number"
           placeholder="Valor"
@@ -225,7 +206,7 @@ export default function Solicitar() {
   );
 }
 
-// Função de estilo para inputs
+// ======== Estilo dos inputs ========
 const inputEstilo = (disabled = false) => ({
   width: "100%",
   padding: "12px",

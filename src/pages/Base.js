@@ -1,199 +1,127 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 import { db } from "../firebaseConfig";
-import { collection, addDoc } from "firebase/firestore";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { collection, addDoc, getDocs } from "firebase/firestore";
 
 const Base = () => {
-  const [arquivo, setArquivo] = useState(null);
-  const [produtos, setProdutos] = useState([]);
-  const [salvando, setSalvando] = useState(false);
-  const [mensagem, setMensagem] = useState("");
+  const [data, setData] = useState([]);
+  const [barcodeQuery, setBarcodeQuery] = useState("");
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const storage = getStorage();
-
-  const handleArquivo = (e) => {
+  // ======== LER ARQUIVO EXCEL ========
+  const handleFileUpload = async (e) => {
     const file = e.target.files[0];
-    setArquivo(file);
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const binaryStr = event.target.result;
+      const workbook = XLSX.read(binaryStr, { type: "binary" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(sheet);
+
+      console.log("📘 Dados lidos do Excel:", jsonData);
+      setData(jsonData);
+
+      await saveDataToFirestore(jsonData);
+    };
+    reader.readAsBinaryString(file);
   };
 
-  const processarArquivo = async () => {
-    if (!arquivo) {
-      alert("⚠️ Selecione um arquivo Excel primeiro!");
-      return;
-    }
-
-    setSalvando(true);
-    setMensagem("Enviando arquivo...");
+  // ======== SALVAR NO FIRESTORE ========
+  const saveDataToFirestore = async (jsonData) => {
+    setLoading(true);
+    const collectionRef = collection(db, "produtos");
 
     try {
-      // === 1️⃣ Upload do arquivo para o Firebase Storage ===
-      const storageRef = ref(storage, `bases/${arquivo.name}`);
-      await uploadBytes(storageRef, arquivo);
-      const urlDownload = await getDownloadURL(storageRef);
+      // 🔹 Limita a quantidade de dados e salva com await correto
+      for (const item of jsonData) {
+        const codigo = item[Object.keys(item)[1]]; // 2ª coluna
+        const descricao = item[Object.keys(item)[2]]; // 3ª coluna
 
-      setMensagem(`✅ Arquivo salvo com sucesso! URL: ${urlDownload}`);
+        if (!codigo || !descricao) continue; // ignora linhas vazias
 
-      // === 2️⃣ Ler o conteúdo do Excel ===
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: "array" });
-        const primeiraPlanilha = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[primeiraPlanilha];
-        const json = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-
-        setProdutos(json);
-
-        // === 3️⃣ Salvar os produtos no Firestore ===
-        await salvarNoFirebase(json);
-      };
-      reader.readAsArrayBuffer(arquivo);
-    } catch (erro) {
-      console.error("Erro:", erro);
-      alert("❌ Erro ao enviar o arquivo para o Firebase!");
-    } finally {
-      setSalvando(false);
-    }
-  };
-
-  // === Função para salvar produtos no Firestore ===
-  const salvarNoFirebase = async (dados) => {
-    try {
-      const produtosRef = collection(db, "produtos");
-
-      for (const produto of dados) {
-        await addDoc(produtosRef, produto);
+        await addDoc(collectionRef, { codigo, descricao });
+        console.log(`✅ Adicionado: ${codigo} - ${descricao}`);
       }
+      alert("Base salva com sucesso no Firebase!");
+    } catch (error) {
+      console.error("❌ Erro ao salvar no Firestore:", error);
+      alert("Erro ao salvar no Firebase. Veja o console.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      setMensagem(
-        `✅ Base salva com sucesso! ${dados.length} produtos adicionados.`
+  // ======== CONSULTAR NO FIRESTORE ========
+  const handleQuery = async () => {
+    if (!barcodeQuery) return;
+    setLoading(true);
+    try {
+      const querySnapshot = await getDocs(collection(db, "produtos"));
+      const allProducts = querySnapshot.docs.map((doc) => doc.data());
+
+      console.log("📦 Produtos no Firestore:", allProducts);
+
+      const found = allProducts.find(
+        (item) => String(item.codigo) === String(barcodeQuery)
       );
-    } catch (erro) {
-      console.error("Erro ao salvar no Firestore:", erro);
-      setMensagem("❌ Erro ao salvar os produtos no Firestore.");
+      setResult(found || null);
+    } catch (err) {
+      console.error("Erro ao consultar:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.titulo}>📦 Base de Produtos</h2>
+      <h2>📂 Upload e Consulta de Base</h2>
 
-      <div style={styles.uploadBox}>
-        <label style={styles.label}>Selecione o arquivo Excel (.xlsx):</label>
-        <input
-          type="file"
-          accept=".xlsx, .xls"
-          onChange={handleArquivo}
-          style={styles.input}
-        />
-        <button
-          onClick={processarArquivo}
-          style={styles.botao}
-          disabled={salvando}
-        >
-          {salvando ? "Salvando..." : "Ler e Enviar"}
-        </button>
-        {mensagem && <p style={styles.mensagem}>{mensagem}</p>}
-      </div>
+      <input
+        type="file"
+        accept=".xlsx, .xls"
+        onChange={handleFileUpload}
+        disabled={loading}
+      />
 
-      {/* Tabela dos produtos */}
-      {produtos.length > 0 && (
-        <div style={styles.tabelaContainer}>
-          <h3 style={styles.subtitulo}>Produtos Carregados:</h3>
-          <table style={styles.tabela}>
-            <thead>
-              <tr>
-                {Object.keys(produtos[0]).map((chave, index) => (
-                  <th key={index} style={styles.th}>
-                    {chave}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {produtos.map((produto, i) => (
-                <tr key={i}>
-                  {Object.values(produto).map((valor, j) => (
-                    <td key={j} style={styles.td}>
-                      {valor}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <br />
+      <br />
+
+      <input
+        type="text"
+        placeholder="Digite o código de barras"
+        value={barcodeQuery}
+        onChange={(e) => setBarcodeQuery(e.target.value)}
+      />
+      <button onClick={handleQuery} disabled={loading}>
+        Consultar
+      </button>
+
+      {loading && <p>⏳ Processando...</p>}
+
+      {result ? (
+        <div>
+          <h3>Resultado:</h3>
+          <p>
+            <b>Código:</b> {result.codigo}
+          </p>
+          <p>
+            <b>Descrição:</b> {result.descricao}
+          </p>
         </div>
+      ) : (
+        barcodeQuery && !loading && <p>Nenhum item encontrado.</p>
       )}
     </div>
   );
 };
 
-// 🎨 Estilos
 const styles = {
   container: {
-    padding: "30px",
-    backgroundColor: "#fff",
-    minHeight: "100vh",
-    color: "#333",
+    padding: "20px",
     fontFamily: "Arial, sans-serif",
-  },
-  titulo: {
-    fontSize: "26px",
-    fontWeight: "bold",
-    marginBottom: "20px",
-  },
-  uploadBox: {
-    backgroundColor: "#f7f7f7",
-    borderRadius: "12px",
-    padding: "25px",
-    boxShadow: "0 0 10px rgba(0,0,0,0.1)",
-    border: "1px solid #ddd",
-    marginBottom: "25px",
-    textAlign: "center",
-  },
-  input: {
-    marginBottom: "10px",
-  },
-  label: {
-    display: "block",
-    fontWeight: "600",
-    marginBottom: "8px",
-  },
-  botao: {
-    padding: "10px 20px",
-    border: "none",
-    borderRadius: "8px",
-    backgroundColor: "#000",
-    color: "#fff",
-    cursor: "pointer",
-    fontWeight: "bold",
-  },
-  mensagem: {
-    marginTop: "10px",
-    fontWeight: "bold",
-    fontSize: "14px",
-  },
-  tabelaContainer: {
-    marginTop: "30px",
-    overflowX: "auto",
-  },
-  subtitulo: {
-    marginBottom: "10px",
-  },
-  tabela: {
-    width: "100%",
-    borderCollapse: "collapse",
-  },
-  th: {
-    border: "1px solid #ddd",
-    padding: "8px",
-    backgroundColor: "#f0f0f0",
-    textAlign: "left",
-  },
-  td: {
-    border: "1px solid #ddd",
-    padding: "8px",
   },
 };
 
