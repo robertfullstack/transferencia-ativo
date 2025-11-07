@@ -3,6 +3,7 @@ import { collection, addDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import { FaUserEdit, FaDatabase } from "react-icons/fa";
 
+
 export default function Admin() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -253,11 +254,12 @@ export default function Admin() {
         icone: <FaUserEdit size={40} />,
         acao: () => setView("usuarios"),
       },
-      {
-        nome: "Base",
-        icone: <FaDatabase size={40} />,
-        acao: () => setView("base"),
-      },
+        {
+  nome: "Base",
+  icone: <FaDatabase size={40} />,
+  acao: () => (window.location.href = "/base"), // ✅ redireciona para a rota
+},
+
     ];
 
     return (
