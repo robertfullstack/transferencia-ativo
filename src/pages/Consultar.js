@@ -136,6 +136,45 @@ export default function Consultar() {
               <p>
                 <strong>Loja:</strong> {s.loja || "—"}
               </p>
+
+              {/* ✅ Informações do produto */}
+              {s.produto ? (
+                <div
+                  style={{
+                    backgroundColor: "#e6f5e8",
+                    padding: "10px",
+                    borderRadius: "8px",
+                    marginTop: "10px",
+                    marginBottom: "10px",
+                    fontSize: "14px",
+                  }}
+                >
+                  <p style={{ fontWeight: "bold", marginBottom: "5px" }}>
+                    🛒 Produto:
+                  </p>
+                  <p>
+                    <strong>Código:</strong> {s.produto.codigo || "—"}
+                  </p>
+                  <p>
+                    <strong>Descrição:</strong> {s.produto.descricao || "—"}
+                  </p>
+                  {s.produto.preco && (
+                    <p>
+                      <strong>Preço:</strong> R$ {s.produto.preco}
+                    </p>
+                  )}
+                  {s.produto.estoque && (
+                    <p>
+                      <strong>Estoque:</strong> {s.produto.estoque}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p>
+                  <strong>Produto:</strong> Não informado
+                </p>
+              )}
+
               <p>
                 <strong>Origem:</strong> {s.origem}
               </p>

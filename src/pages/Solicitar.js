@@ -33,11 +33,14 @@ export default function Solicitar() {
 
       try {
         const querySnapshot = await getDocs(collection(db, "produtos"));
-        const produtos = querySnapshot.docs.map((doc) => doc.data());
+        const produtos = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
 
         // procura o produto pelo campo "codigo"
         const encontrado = produtos.find(
-          (p) => String(p.codigo) === String(codigoBarras).trim()
+          (p) => String(p.codigo).trim() === String(codigoBarras).trim()
         );
 
         if (encontrado) {
@@ -71,7 +74,16 @@ export default function Solicitar() {
         categoria,
         loja,
         codigoBarras,
-        produto: produto ? produto.descricao || produto.codigo : "Produto não encontrado",
+        produto: produto
+          ? {
+              id: produto.id || null,
+              codigo: produto.codigo || "",
+              descricao: produto.descricao || "",
+              preco: produto.preco || null,
+              estoque: produto.estoque || null,
+              ...produto, // caso tenha mais campos no Firestore
+            }
+          : null,
         origem,
         destino,
         valor,
@@ -86,7 +98,7 @@ export default function Solicitar() {
       setCodigoBarras("");
       setProduto(null);
     } catch (error) {
-      console.error(error);
+      console.error("Erro ao enviar solicitação:", error);
       setMensagem("❌ Erro ao enviar solicitação.");
     }
   };
@@ -143,7 +155,17 @@ export default function Solicitar() {
             }}
           >
             <strong>Código:</strong> {produto.codigo} <br />
-            <strong>Descrição:</strong> {produto.descricao || "—"}
+            <strong>Descrição:</strong> {produto.descricao || "—"} <br />
+            {produto.preco && (
+              <>
+                <strong>Preço:</strong> R$ {produto.preco} <br />
+              </>
+            )}
+            {produto.estoque && (
+              <>
+                <strong>Estoque:</strong> {produto.estoque}
+              </>
+            )}
           </div>
         )}
 
