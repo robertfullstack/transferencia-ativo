@@ -193,6 +193,7 @@ export default function Admin() {
             <option value="Supervisor">Supervisor</option>
             <option value="Operacoes">Operações</option>
             <option value="Contabil">Contábil</option>
+            <option value="Fiscal">Fiscal</option>
             <option value="Adm Loja (Recebimentos)">
               Adm Loja (Recebimentos)
             </option>

@@ -7,6 +7,7 @@ import Solicitar from "./pages/Solicitar";
 import CadastroUsuario from "./pages/CadastroUsuario";
 import Consultar from "./pages/Consultar";
 import Base from "./pages/Base";
+import Recebidos from "./pages/Recebidos";
 
 function App() {
   return (
@@ -21,6 +22,8 @@ function App() {
         <Route path="/consultar" element={<Consultar />} />
         <Route path="/admin/cadastrar" element={<CadastroUsuario />} />
                 <Route path="/base" element={<Base />} />
+                <Route path="/base" element={<Base />} />
+                <Route path="/recebidos" element={<Recebidos />} />
 
       </Routes>
     </Router>

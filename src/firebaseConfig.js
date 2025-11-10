@@ -3,14 +3,13 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
- apiKey: "AIzaSyCL75e3y4pO4siCi3N_jjBDUmLrvFhsba8",
-  authDomain: "atrativo-social.firebaseapp.com",
-  databaseURL: "https://atrativo-social-default-rtdb.firebaseio.com",
-  projectId: "atrativo-social",
-  storageBucket: "atrativo-social.appspot.com",
-  messagingSenderId: "147961984705",
-  appId: "1:147961984705:web:38893f9ea008de50328640",
-  measurementId: "G-F09PQ0D4R1"
+  apiKey: "AIzaSyAaQ2F9uGHm_Z6jnahYeOjxnEgDqlXbeZg",
+  authDomain: "tec-serv-468b7.firebaseapp.com",
+  databaseURL: "https://tec-serv-468b7-default-rtdb.firebaseio.com",
+  projectId: "tec-serv-468b7",
+  storageBucket: "tec-serv-468b7.firebasestorage.app",
+  messagingSenderId: "577413763329",
+  appId: "1:577413763329:web:3709be19efba59de7b0b00"
 };
 
 const app = initializeApp(firebaseConfig);

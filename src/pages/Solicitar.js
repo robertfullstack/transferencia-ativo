@@ -12,6 +12,8 @@ export default function Solicitar() {
   const [codigoBarras, setCodigoBarras] = useState("");
   const [produto, setProduto] = useState(null);
   const [mensagem, setMensagem] = useState("");
+  const [motivo, setMotivo] = useState("");
+
 
   // ======== CARREGA DADOS DO USUÁRIO ========
   useEffect(() => {
@@ -20,7 +22,10 @@ export default function Solicitar() {
     const lj = localStorage.getItem("usuarioLoja");
     if (nome) setUsuario(nome);
     if (cat) setCategoria(cat);
-    if (lj) setLoja(lj);
+    if (lj) {
+      setLoja(lj);
+      setOrigem(lj); // 👈 Origem automaticamente igual à Loja
+    }
   }, []);
 
   // ======== CONSULTA PRODUTO PELO CÓDIGO DE BARRAS ========
@@ -38,7 +43,6 @@ export default function Solicitar() {
           ...doc.data(),
         }));
 
-        // procura o produto pelo campo "codigo"
         const encontrado = produtos.find(
           (p) => String(p.codigo).trim() === String(codigoBarras).trim()
         );
@@ -69,30 +73,31 @@ export default function Solicitar() {
     }
 
     try {
-      await addDoc(collection(db, "solicitacoes"), {
-        usuario,
-        categoria,
-        loja,
-        codigoBarras,
-        produto: produto
-          ? {
-              id: produto.id || null,
-              codigo: produto.codigo || "",
-              descricao: produto.descricao || "",
-              preco: produto.preco || null,
-              estoque: produto.estoque || null,
-              ...produto, // caso tenha mais campos no Firestore
-            }
-          : null,
-        origem,
-        destino,
-        valor,
-        status: "Pendente",
-        data: new Date(),
-      });
+    await addDoc(collection(db, "solicitacoes"), {
+  usuario,
+  categoria,
+  loja,
+  codigoBarras,
+  produto: produto
+    ? {
+        id: produto.id || null,
+        codigo: produto.codigo || "",
+        descricao: produto.descricao || "",
+        preco: produto.preco || null,
+        estoque: produto.estoque || null,
+        ...produto,
+      }
+    : null,
+  origem,
+  destino,
+  valor,
+  motivo, // 👈 Adicionado aqui
+  status: "Pendente",
+  data: new Date(),
+});
+
 
       setMensagem("✅ Solicitação enviada com sucesso!");
-      setOrigem("");
       setDestino("");
       setValor("");
       setCodigoBarras("");
@@ -131,7 +136,17 @@ export default function Solicitar() {
 
         <input type="text" value={usuario} disabled style={inputEstilo(true)} />
         <input type="text" value={categoria} disabled style={inputEstilo(true)} />
-        <input type="text" value={loja} disabled style={inputEstilo(true)} />
+        {/* <input type="text" value={loja} disabled style={inputEstilo(true)} /> */}
+
+        
+       {/* Origem (preenchida automaticamente com a Loja) */}
+        <input
+          type="text"
+          placeholder="Origem"
+          value={origem}
+          disabled // 👈 impede edição manual
+          style={inputEstilo(true)}
+        />
 
         {/* Código de Barras */}
         <input
@@ -169,14 +184,7 @@ export default function Solicitar() {
           </div>
         )}
 
-        {/* Origem / Destino / Valor */}
-        <input
-          type="text"
-          placeholder="Origem"
-          value={origem}
-          onChange={(e) => setOrigem(e.target.value)}
-          style={inputEstilo()}
-        />
+ 
         <input
           type="text"
           placeholder="Destino"
@@ -184,6 +192,37 @@ export default function Solicitar() {
           onChange={(e) => setDestino(e.target.value)}
           style={inputEstilo()}
         />
+
+        {/* Motivo */}
+<select
+  value={motivo}
+  onChange={(e) => setMotivo(e.target.value)}
+  style={inputEstilo()}
+>
+  <option value="">Selecione o motivo</option>
+
+  <optgroup label="TRANSFERÊNCIA (Apenas equipamentos completos em perfeito estado)">
+    {/* <option value="Transferência">
+      Transferência
+    </option> */}
+
+      <option value="Armazenagem (CD)">Armazenagem (CD)</option>
+    <option value="Antigo">Antigo</option>
+    <option value="Fora de uso">Fora de uso</option>
+  </optgroup>
+
+  {/* <optgroup label="ARMAZENAGEM (CD)"> */}
+  
+  {/* </optgroup> */}
+
+  <optgroup label="REPARO / DESCARTE">
+    <option value="Reparo / Descarte">Reparo / Descarte</option>
+    <option value="Mau uso">Mau uso</option>
+    <option value="Desgaste">Desgaste</option>
+    <option value="Garantia do fabricante">Garantia do fabricante</option>
+  </optgroup>
+</select>
+
         <input
           type="number"
           placeholder="Valor"
