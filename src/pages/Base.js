@@ -4,7 +4,7 @@ import { db } from "../firebaseConfig";
 import { collection, addDoc, getDocs } from "firebase/firestore";
 
 const Base = () => {
-  const [data, setData] = useState([]);
+const [, setData] = useState([]);
   const [barcodeQuery, setBarcodeQuery] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);

@@ -9,7 +9,7 @@ export default function Recebidos() {
   const [carregando, setCarregando] = useState(true);
 
   const categoriaUsuario = localStorage.getItem("categoria");
-  const nomeUsuario = localStorage.getItem("nome");
+  // const nomeUsuario = localStorage.getItem("nome");
 
   useEffect(() => {
     // ✅ Verifica se é o perfil permitido
