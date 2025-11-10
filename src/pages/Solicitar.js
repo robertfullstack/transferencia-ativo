@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { collection, addDoc, getDocs } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 
+
 export default function Solicitar() {
   const [usuario, setUsuario] = useState("");
   const [categoria, setCategoria] = useState("");
