@@ -190,6 +190,8 @@ export default function Admin() {
             <option value="Adm Loja (Inicio do processo de transferência)">
               Adm Loja (Início do processo de transferência)
             </option>
+
+            
             <option value="Supervisor">Supervisor</option>
             <option value="Operacoes">Operações</option>
             <option value="Contabil">Contábil</option>
