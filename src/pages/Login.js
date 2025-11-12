@@ -24,12 +24,17 @@ export default function Login() {
       });
 
       if (usuarioEncontrado) {
-        // ✅ Salva tudo no localStorage
+        // ✅ Salva dados do usuário no localStorage
         localStorage.setItem("usuarioNome", usuarioEncontrado.nome);
         localStorage.setItem("usuarioCategoria", usuarioEncontrado.categoria);
         localStorage.setItem("usuarioLoja", usuarioEncontrado.loja);
 
-        navigate("/home"); // redireciona após login
+        // ✅ Redireciona conforme a categoria
+        if (usuarioEncontrado.categoria === "Fiscal") {
+          navigate("/fiscal");
+        } else {
+          navigate("/home");
+        }
       } else {
         setErro("Usuário ou senha inválidos!");
       }

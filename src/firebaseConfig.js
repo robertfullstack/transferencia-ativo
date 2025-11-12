@@ -3,14 +3,14 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAaQ2F9uGHm_Z6jnahYeOjxnEgDqlXbeZg",
-  authDomain: "tec-serv-468b7.firebaseapp.com",
-  databaseURL: "https://tec-serv-468b7-default-rtdb.firebaseio.com",
-  projectId: "tec-serv-468b7",
-  storageBucket: "tec-serv-468b7.firebasestorage.app",
-  messagingSenderId: "577413763329",
-  appId: "1:577413763329:web:3709be19efba59de7b0b00"
+  apiKey: "AIzaSyCsU5WS5JvbTESVo44xp04LQIaGsaXTOZU",
+  authDomain: "ativos-trans.firebaseapp.com",
+  projectId: "ativos-trans",
+  storageBucket: "ativos-trans.firebasestorage.app",
+  messagingSenderId: "821749851673",
+  appId: "1:821749851673:web:20ded142a9a8aadfe42c88"
 };
+
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);

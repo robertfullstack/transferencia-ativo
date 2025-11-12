@@ -423,7 +423,7 @@ const atualizarStatus = async (id, novoStatus) => {
         width: "100%",
         padding: "8px",
         borderRadius: "6px",
-        border: "1px solid #ccc",
+        border: "1px solid #ccccccff",
         marginBottom: "8px",
       }}
     />

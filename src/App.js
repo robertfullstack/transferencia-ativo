@@ -8,6 +8,7 @@ import CadastroUsuario from "./pages/CadastroUsuario";
 import Consultar from "./pages/Consultar";
 import Base from "./pages/Base";
 import Recebidos from "./pages/Recebidos";
+import Fiscal from "./pages/Fiscal";
 
 function App() {
   return (
@@ -24,6 +25,8 @@ function App() {
                 <Route path="/base" element={<Base />} />
                 <Route path="/base" element={<Base />} />
                 <Route path="/recebidos" element={<Recebidos />} />
+                <Route path="/recebidos" element={<Recebidos />} />
+                <Route path="/fiscal" element={<Fiscal />} />
 
       </Routes>
     </Router>
