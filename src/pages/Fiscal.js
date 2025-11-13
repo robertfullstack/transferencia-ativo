@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
+import { collection, getDocs, query, where, updateDoc, doc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 
 const Fiscal = () => {
@@ -20,7 +20,10 @@ const Fiscal = () => {
 
   const buscarSolicitacoes = async () => {
     try {
-      const querySnapshot = await getDocs(collection(db, "solicitacoes"));
+      // 🔹 Busca apenas solicitações com status "Aprovado"
+      const q = query(collection(db, "solicitacoes"), where("status", "==", "Aprovado"));
+      const querySnapshot = await getDocs(q);
+
       const lista = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -71,11 +74,11 @@ const Fiscal = () => {
     <div style={{ padding: "30px", fontFamily: "Arial, sans-serif" }}>
       <h2 style={{ marginBottom: "20px", textAlign: "center" }}>📋 Painel do Fiscal</h2>
       <p style={{ textAlign: "center", marginBottom: "30px" }}>
-        Todas as solicitações (Aprovadas, Reprovadas e Pendentes)
+        Exibindo apenas solicitações com status <b>"Aprovado"</b>
       </p>
 
       {solicitacoes.length === 0 ? (
-        <p style={{ textAlign: "center" }}>Nenhuma solicitação encontrada.</p>
+        <p style={{ textAlign: "center" }}>Nenhuma solicitação aprovada encontrada.</p>
       ) : (
         <div
           style={{
@@ -109,58 +112,11 @@ const Fiscal = () => {
               <p><strong>Motivo:</strong> {sol.motivo || "—"}</p>
               <p><strong>Valor:</strong> R$ {sol.valor || "—"}</p>
               <p><strong>Loja:</strong> {sol.loja || "—"}</p>
-              <p><strong>Editado por:</strong> {sol.editadoPor || "—"}</p>
-              <p><strong>Aprovado por Contábil:</strong> {sol.aprovadoPorContabil || "—"}</p>
 
               <p>
-                <strong>Data de Solicitação:</strong>{" "}
-                {sol.data
-                  ? new Date(sol.data.seconds * 1000).toLocaleString("pt-BR")
-                  : "—"}
-              </p>
-              <p>
-                <strong>Data de Edição:</strong>{" "}
-                {sol.dataEdicao
-                  ? new Date(sol.dataEdicao.seconds * 1000).toLocaleString("pt-BR")
-                  : "—"}
-              </p>
-              <p>
-                <strong>Data de Aprovação Contábil:</strong>{" "}
-                {sol.dataAprovacaoContabil
-                  ? new Date(sol.dataAprovacaoContabil.seconds * 1000).toLocaleString("pt-BR")
-                  : "—"}
-              </p>
-
-              <p>
-                <strong>Status Fiscal:</strong>{" "}
-                <span
-                  style={{
-                    fontWeight: "bold",
-                    color:
-                      sol.status === "Aprovado"
-                        ? "green"
-                        : sol.status === "Reprovado"
-                        ? "red"
-                        : "#555",
-                  }}
-                >
-                  {sol.status || "Pendente"}
-                </span>
-              </p>
-              <p>
-                <strong>Status Contábil:</strong>{" "}
-                <span
-                  style={{
-                    fontWeight: "bold",
-                    color:
-                      sol.statusContabil === "Aprovado"
-                        ? "green"
-                        : sol.statusContabil === "Reprovado"
-                        ? "red"
-                        : "#555",
-                  }}
-                >
-                  {sol.statusContabil || "Pendente"}
+                <strong>Status:</strong>{" "}
+                <span style={{ fontWeight: "bold", color: "green" }}>
+                  {sol.status}
                 </span>
               </p>
 

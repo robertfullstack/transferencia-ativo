@@ -86,28 +86,37 @@ const carregarSolicitacoes = async (nomeUsuario, categoriaUsuario) => {
   try {
     const solicitacoesRef = collection(db, "solicitacoes");
     let q;
-if (categoriaUsuario === "Supervisor") {
-  // Supervisor vê todas as solicitações
-  q = query(solicitacoesRef);
-} 
-else if (categoriaUsuario === "Operacoes") {
-  // Operações vê apenas solicitações aprovadas pelo Supervisor
-  q = query(solicitacoesRef, where("status", "==", "Aprovado"));
-}
-else if (categoriaUsuario === "Contabil") {
-  // Contábil vê todas as solicitações aprovadas (por qualquer perfil)
-  q = query(solicitacoesRef, where("status", "==", "Aprovado"));
-}
-else if (categoriaUsuario === "Fiscal") {
-  // 🔥 Fiscal vê todas as solicitações aprovadas para poder anexar documento
-  q = query(solicitacoesRef, where("status", "==", "Aprovado"));
-}
-else {
-  // Usuário comum vê apenas as suas solicitações
-  q = query(solicitacoesRef, where("usuario", "==", nomeUsuario));
+
+    if (categoriaUsuario === "Supervisor") {
+      // Supervisor vê todas as solicitações
+      q = query(solicitacoesRef);
+    } 
+    else if (categoriaUsuario === "Operacoes") {
+      // Operações vê apenas solicitações aprovadas pelo Supervisor
+      q = query(solicitacoesRef, where("status", "==", "Aprovado"));
+    }
+    else if (categoriaUsuario === "Contabil") {
+      // Contábil vê todas as solicitações aprovadas
+      q = query(solicitacoesRef, where("status", "==", "Aprovado"));
+    }
+    else if (categoriaUsuario === "Fiscal") {
+      // Fiscal vê todas as solicitações aprovadas para poder anexar documento
+      q = query(solicitacoesRef, where("status", "==", "Aprovado"));
+    }
+else if (categoriaUsuario === "Adm Loja") {
+  // Busca todas, e depois filtra as que têm documento anexado
+  const snapshot = await getDocs(solicitacoesRef);
+  const docs = snapshot.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .filter((s) => s.documentoFiscalBase64); // só as que têm anexo
+  setSolicitacoes(docs);
+  return;
 }
 
-
+    else {
+      // Usuário comum vê apenas as suas solicitações
+      q = query(solicitacoesRef, where("usuario", "==", nomeUsuario));
+    }
 
     const querySnapshot = await getDocs(q);
     const lista = querySnapshot.docs.map((doc) => ({
@@ -116,9 +125,9 @@ else {
     }));
 
     setSolicitacoes(lista);
+    setCarregando(false);
   } catch (error) {
     console.error("Erro ao buscar solicitações:", error);
-  } finally {
     setCarregando(false);
   }
 };
@@ -210,12 +219,14 @@ const atualizarStatus = async (id, novoStatus) => {
             margin: "0 auto",
           }}
         >
+
+          
           {solicitacoes.map((s) => {
             const produtoEncontrado = buscarProdutoPorCodigo(
               s.produto?.codigo || s.codigoProduto || ""
             );
 
-            return (
+              return (
               <div
                 key={s.id}
                 style={{
@@ -226,6 +237,7 @@ const atualizarStatus = async (id, novoStatus) => {
                   boxShadow: "0 0 10px rgba(0,0,0,0.05)",
                 }}
               >
+                
                 <p>
                   <strong>Usuário:</strong> {s.usuario}
                 </p>
@@ -233,45 +245,103 @@ const atualizarStatus = async (id, novoStatus) => {
                   <strong>Categoria:</strong> {s.categoria}
                 </p>
                 <p>
-                  <strong>Loja/Destino:</strong> {s.loja || "—"}</p>
+                  <strong>Loja/Destino:</strong> {s.destino || "—"}</p>
 
                 {/* Produto do Firestore */}
-                {s.produto ? (
-                  <div
-                    style={{
-                      backgroundColor: "#e6f5e8",
-                      padding: "10px",
-                      borderRadius: "8px",
-                      marginTop: "10px",
-                      marginBottom: "10px",
-                      fontSize: "14px",
-                    }}
-                  >
-                    <p style={{ fontWeight: "bold", marginBottom: "5px" }}>
-                      Produto:
-                    </p>
-                    <p>
-                      <strong>Código:</strong> {s.produto.codigo || "—"}
-                    </p>
-                    <p>
-                      <strong>Descrição:</strong> {s.produto.descricao || "—"}
-                    </p>
-                    {s.produto.preco && (
-                      <p>
-                        <strong>Preço:</strong> R$ {s.produto.preco}
-                      </p>
-                    )}
-                    {s.produto.estoque && (
-                      <p>
-                        <strong>Estoque:</strong> {s.produto.estoque}
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <p>
-                    <strong>Produto Firestore:</strong> Não informado
-                  </p>
-                )}
+            {/* Produto do Firestore */}
+{s.produto ? (
+  <div
+    style={{
+      backgroundColor: "#e6f5e8",
+      padding: "10px",
+      borderRadius: "8px",
+      marginTop: "10px",
+      marginBottom: "10px",
+      fontSize: "14px",
+    }}
+  >
+    <p style={{ fontWeight: "bold", marginBottom: "5px" }}>
+      Produto:
+    </p>
+    <p>
+      <strong>Código:</strong> {s.produto.codigo || "—"}
+    </p>
+    <p>
+      <strong>Descrição:</strong> {s.produto.descricao || "—"}
+    </p>
+    {s.produto.preco && (
+      <p>
+        <strong>Preço:</strong> R$ {s.produto.preco}
+      </p>
+    )}
+    {s.produto.estoque && (
+      <p>
+        <strong>Estoque:</strong> {s.produto.estoque}
+      </p>
+    )}
+
+    {/* ✅ Link do anexo do Fiscal */}
+    {s.arquivoFiscalURL && (
+      <div
+        style={{
+          marginTop: "10px",
+          backgroundColor: "#f0f8ff",
+          padding: "8px",
+          borderRadius: "6px",
+          border: "1px solid #d0e0ff",
+        }}
+      >
+        <p style={{ margin: 0, fontWeight: "bold", color: "#003366" }}>
+          📎 Documento Fiscal:
+        </p>
+        <a
+          href={s.arquivoFiscalURL}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: "inline-block",
+            marginTop: "4px",
+            color: "#007bff",
+            textDecoration: "underline",
+            wordBreak: "break-all",
+          }}
+        >
+          Ver arquivo anexado
+        </a>
+      </div>
+    )}
+  </div>
+) : (
+  <p>
+    <strong>Produto Firestore:</strong> Não informado
+  </p>
+)}
+
+{s.documentoFiscalBase64 && (
+  <div
+    style={{
+      marginTop: "10px",
+      backgroundColor: "#f0f8ff",
+      padding: "10px",
+      borderRadius: "8px",
+      border: "1px solid #d0e0ff",
+    }}
+  >
+    <p style={{ marginBottom: "5px", fontWeight: "bold", color: "#003366" }}>
+      📎 Documento Fiscal Anexado:
+    </p>
+<a
+  href={s.documentoFiscalBase64}
+  target="_blank"
+  rel="noopener noreferrer"
+  type="application/pdf"
+>
+  {s.nomeDocumento || "Abrir documento"}
+</a>
+
+  </div>
+)}
+
 
                 {/* Produto do Excel */}
                 {produtoEncontrado ? (
@@ -346,45 +416,46 @@ const atualizarStatus = async (id, novoStatus) => {
                   {s.data ? new Date(s.data.seconds * 1000).toLocaleString() : "—"}
                 </p>
 
-                {categoria === "Supervisor" && (
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "center",
-                      gap: "10px",
-                      marginTop: "10px",
-                    }}
-                  >
-                    <button
-                      onClick={() => atualizarStatus(s.id, "Aprovado")}
-                      style={{
-                        backgroundColor: "green",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: "6px",
-                        padding: "8px 14px",
-                        cursor: "pointer",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      ✅ Aprovar
-                    </button>
-                    <button
-                      onClick={() => atualizarStatus(s.id, "Reprovado")}
-                      style={{
-                        backgroundColor: "red",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: "6px",
-                        padding: "8px 14px",
-                        cursor: "pointer",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      ❌ Reprovar
-                    </button>
-                  </div>
-                )}
+             {(categoria === "Supervisor" || categoria === "Operacoes") && (
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "center",
+      gap: "10px",
+      marginTop: "10px",
+    }}
+  >
+    <button
+      onClick={() => atualizarStatus(s.id, "Aprovado")}
+      style={{
+        backgroundColor: "green",
+        color: "#fff",
+        border: "none",
+        borderRadius: "6px",
+        padding: "8px 14px",
+        cursor: "pointer",
+        fontWeight: "bold",
+      }}
+    >
+      ✅ Aprovar
+    </button>
+    <button
+      onClick={() => atualizarStatus(s.id, "Reprovado")}
+      style={{
+        backgroundColor: "red",
+        color: "#fff",
+        border: "none",
+        borderRadius: "6px",
+        padding: "8px 14px",
+        cursor: "pointer",
+        fontWeight: "bold",
+      }}
+    >
+      ❌ Reprovar
+    </button>
+  </div>
+)}
+
 
                 {/* === Edição para o Contábil === */}
 {/* === Edição e Aprovação para o Contábil === */}
@@ -636,6 +707,8 @@ const atualizarStatus = async (id, novoStatus) => {
 
               </div>
             );
+
+
           })}
         </div>
       )}
