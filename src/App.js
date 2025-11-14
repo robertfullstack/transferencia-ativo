@@ -22,11 +22,11 @@ function App() {
         <Route path="/solicitar" element={<Solicitar />} />
         <Route path="/consultar" element={<Consultar />} />
         <Route path="/admin/cadastrar" element={<CadastroUsuario />} />
-                <Route path="/base" element={<Base />} />
-                <Route path="/base" element={<Base />} />
-                <Route path="/recebidos" element={<Recebidos />} />
-                <Route path="/recebidos" element={<Recebidos />} />
-                <Route path="/fiscal" element={<Fiscal />} />
+        <Route path="/base" element={<Base />} />
+        <Route path="/base" element={<Base />} />
+        <Route path="/recebidos" element={<Recebidos />} />
+        <Route path="/recebidos" element={<Recebidos />} />
+        <Route path="/fiscal" element={<Fiscal />} />
 
       </Routes>
     </Router>

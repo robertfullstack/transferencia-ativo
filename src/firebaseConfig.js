@@ -3,12 +3,12 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBBkUbIGY5wKkxwx70CerHUEW-_s4uvhTc",
-  authDomain: "trans-f6a8f.firebaseapp.com",
-  projectId: "trans-f6a8f",
-  storageBucket: "trans-f6a8f.firebasestorage.app",
-  messagingSenderId: "622028289458",
-  appId: "1:622028289458:web:4c3d99fb7ab93d91d0e0ab"
+  apiKey: "AIzaSyCsU5WS5JvbTESVo44xp04LQIaGsaXTOZU",
+  authDomain: "ativos-trans.firebaseapp.com",
+  projectId: "ativos-trans",
+  storageBucket: "ativos-trans.firebasestorage.app",
+  messagingSenderId: "821749851673",
+  appId: "1:821749851673:web:20ded142a9a8aadfe42c88"
 };
 
 

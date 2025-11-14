@@ -14,6 +14,17 @@ export default function Solicitar() {
   const [produto, setProduto] = useState(null);
   const [mensagem, setMensagem] = useState("");
   const [motivo, setMotivo] = useState("");
+const [arquivoSolicitar, setArquivoSolicitar] = useState(null);
+const [arquivoBase64, setArquivoBase64] = useState(null);
+const [nomeArquivo, setNomeArquivo] = useState("");
+const converterParaBase64 = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
 
 
   // ======== CARREGA DADOS DO USUÁRIO ========
@@ -92,10 +103,21 @@ export default function Solicitar() {
   origem,
   destino,
   valor,
-  motivo, // 👈 Adicionado aqui
+  motivo,
   status: "Pendente",
+
+  // 🔹 Status do fiscal
+  statusFiscal: "Em análise",
+  aprovadoPorFiscal: null,
+  dataAprovacaoFiscal: null,
+
+  // 🔹 Documento anexado
+  documentoSolicitanteBase64: arquivoBase64 || null,
+  nomeDocumentoSolicitante: nomeArquivo || null,
+
   data: new Date(),
 });
+
 
 
       setMensagem("✅ Solicitação enviada com sucesso!");
@@ -149,14 +171,16 @@ export default function Solicitar() {
           style={inputEstilo(true)}
         />
 
-        {/* Código de Barras */}
-        <input
-          type="text"
-          placeholder="Código de Barras do Produto"
-          value={codigoBarras}
-          onChange={(e) => setCodigoBarras(e.target.value)}
-          style={inputEstilo()}
-        />
+<div style={containerInput}>
+  <label style={labelEstilo(codigoBarras)}>Código do produto</label>
+  <input 
+    type="text"
+    value={codigoBarras}
+    onChange={(e) => setCodigoBarras(e.target.value)}
+    style={inputAnimado()}
+  />
+</div>
+
 
         {/* Mostrar informações do produto */}
         {produto && (
@@ -186,51 +210,72 @@ export default function Solicitar() {
         )}
 
  
-        <input
-          type="text"
-          placeholder="Destino"
-          value={destino}
-          onChange={(e) => setDestino(e.target.value)}
-          style={inputEstilo()}
-        />
+<div style={containerInput}>
+  <label style={labelEstilo(destino)}>Destino</label>
+  <input
+    type="text"
+    value={destino}
+    onChange={(e) => setDestino(e.target.value)}
+    style={inputAnimado()}
+  />
+</div>
 
         {/* Motivo */}
-<select
-  value={motivo}
-  onChange={(e) => setMotivo(e.target.value)}
-  style={inputEstilo()}
->
-  <option value="">Selecione o motivo</option>
+<div style={containerInput}>
+  <label style={labelEstilo(motivo)}>Motivo</label>
 
-  <optgroup label="TRANSFERÊNCIA (Apenas equipamentos completos em perfeito estado)">
-    {/* <option value="Transferência">
-      Transferência
-    </option> */}
+  <select
+    value={motivo}
+    onChange={(e) => setMotivo(e.target.value)}
+    style={selectAnimado()}
+  >
+    <option value="" disabled>Motivo</option>
 
+    <optgroup label="TRANSFERÊNCIA (Apenas equipamentos completos em perfeito estado)">
       <option value="Armazenagem (CD)">Armazenagem (CD)</option>
-    <option value="Antigo">Antigo</option>
-    <option value="Fora de uso">Fora de uso</option>
-  </optgroup>
+      <option value="Antigo">Antigo</option>
+      <option value="Fora de uso">Fora de uso</option>
+    </optgroup>
 
-  {/* <optgroup label="ARMAZENAGEM (CD)"> */}
-  
-  {/* </optgroup> */}
+    <optgroup label="REPARO / DESCARTE">
+      <option value="Reparo / Descarte">Reparo / Descarte</option>
+      <option value="Mau uso">Mau uso</option>
+      <option value="Desgaste">Desgaste</option>
+      <option value="Garantia do fabricante">Garantia do fabricante</option>
+    </optgroup>
+  </select>
+</div>
+<div style={containerInput}>
+  <label style={labelEstilo(valor)}>Valor</label>
+  <input
+    type="number"
+    value={valor}
+    onChange={(e) => setValor(e.target.value)}
+    style={inputAnimado()}
+  />
+</div>
 
-  <optgroup label="REPARO / DESCARTE">
-    <option value="Reparo / Descarte">Reparo / Descarte</option>
-    <option value="Mau uso">Mau uso</option>
-    <option value="Desgaste">Desgaste</option>
-    <option value="Garantia do fabricante">Garantia do fabricante</option>
-  </optgroup>
-</select>
+<label>
+  Anexar Documento:
+</label>
+<input
+  type="file"
+  onChange={async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setArquivoSolicitar(file);
+      setNomeArquivo(file.name);
+      const base64 = await converterParaBase64(file);
+      setArquivoBase64(base64);
+    }
+  }}
+  style={{
+    marginTop: "6px",
+    marginBottom: "12px",
+    padding: "6px",
+  }}
+/>
 
-        <input
-          type="number"
-          placeholder="Valor"
-          value={valor}
-          onChange={(e) => setValor(e.target.value)}
-          style={inputEstilo()}
-        />
 
         <button
           type="submit"
@@ -277,4 +322,50 @@ const inputEstilo = (disabled = false) => ({
   border: "1px solid #aaa",
   backgroundColor: disabled ? "#eee" : "#fff",
   fontWeight: disabled ? "bold" : "normal",
+});
+const containerInput = {
+  position: "relative",
+  width: "100%",
+  marginBottom: "18px",
+};
+
+const labelEstilo = (ativo) => ({
+  position: "absolute",
+  top: ativo ? "-8px" : "13px",
+  left: "15px",
+  fontSize: ativo ? "12px" : "15px",
+  color: ativo ? "#000" : "#777",
+  backgroundColor: "#fff",
+  padding: "0 6px",
+  transition: "all 0.2s ease",
+  pointerEvents: "none",
+
+});
+
+const inputAnimado = () => ({
+  width: "100%",
+  padding: "14px 12px 10px",
+  borderRadius: "6px",
+  border: "1.5px solid #aaa",
+  outline: "none",
+  fontSize: "15px",
+  transition: "0.2s",
+  backgroundColor: "#fff",
+});
+const selectAnimado = () => ({
+  width: "100%",
+  padding: "14px 12px 10px",
+  borderRadius: "6px",
+  border: "1.5px solid #aaa",
+  outline: "none",
+  fontSize: "15px",
+  backgroundColor: "#fff",
+  appearance: "none",
+  transition: "0.2s",
+  backgroundImage:
+    "linear-gradient(45deg, transparent 50%, #888 50%), linear-gradient(135deg, #888 50%, transparent 50%)",
+  backgroundPosition:
+    "calc(100% - 20px) calc(50% - 3px), calc(100% - 15px) calc(50% - 3px)",
+  backgroundSize: "5px 5px, 5px 5px",
+  backgroundRepeat: "no-repeat",
 });
