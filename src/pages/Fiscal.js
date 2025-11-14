@@ -12,7 +12,7 @@ const Fiscal = () => {
   useEffect(() => {
     const categoria = localStorage.getItem("usuarioCategoria");
     if (categoria !== "Fiscal") {
-      navigate("/"); // bloqueia acesso direto se não for fiscal
+      navigate("/");
     } else {
       buscarSolicitacoes();
     }
@@ -20,7 +20,6 @@ const Fiscal = () => {
 
   const buscarSolicitacoes = async () => {
     try {
-      // 🔹 Busca apenas solicitações com status "Aprovado"
       const q = query(collection(db, "solicitacoes"), where("status", "==", "Aprovado"));
       const querySnapshot = await getDocs(q);
 
@@ -52,12 +51,14 @@ const Fiscal = () => {
       reader.onloadend = async () => {
         const base64String = reader.result;
         const docRef = doc(db, "solicitacoes", id);
+
         await updateDoc(docRef, {
           documentoFiscalBase64: base64String,
           nomeDocumento: file.name,
         });
+
         alert("✅ Documento anexado com sucesso!");
-        buscarSolicitacoes(); // atualiza lista
+        buscarSolicitacoes();
       };
       reader.readAsDataURL(file);
     } catch (erro) {
@@ -66,8 +67,16 @@ const Fiscal = () => {
     }
   };
 
+  // 🔥🔥🔥 LOADER PROFESSIONAL (IGUAL AO DA BASE) 🔥
   if (carregando) {
-    return <p style={{ textAlign: "center", marginTop: "40px" }}>Carregando...</p>;
+    return (
+      <div style={styles.overlay}>
+        <div style={styles.loaderBox}>
+          <div style={styles.spinner}></div>
+          <p style={{ fontSize: 18, marginTop: 10 }}>Carregando solicitações...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -99,11 +108,9 @@ const Fiscal = () => {
               }}
             >
               <h3 style={{ marginBottom: "10px", color: "#000" }}>
-                Produto:{" "}
-                <span style={{ color: "#333" }}>
-                  {sol.produto?.descricao || "—"}
-                </span>
+                Produto: <span style={{ color: "#333" }}>{sol.produto?.descricao || "—"}</span>
               </h3>
+
               <p><strong>Código:</strong> {sol.codigoBarras || sol.produto?.codigo || "—"}</p>
               <p><strong>Usuário:</strong> {sol.usuario || "—"}</p>
               <p><strong>Categoria:</strong> {sol.categoria || "—"}</p>
@@ -115,14 +122,11 @@ const Fiscal = () => {
 
               <p>
                 <strong>Status:</strong>{" "}
-                <span style={{ fontWeight: "bold", color: "green" }}>
-                  {sol.status}
-                </span>
+                <span style={{ fontWeight: "bold", color: "green" }}>{sol.status}</span>
               </p>
 
               <hr style={{ margin: "15px 0" }} />
 
-              {/* Upload de documento fiscal */}
               {sol.documentoFiscalBase64 ? (
                 <p>
                   📎 Documento anexado:{" "}
@@ -164,5 +168,42 @@ const Fiscal = () => {
     </div>
   );
 };
+
+// ======== ESTILOS DO LOADER (MESMO DA BASE) ========
+const styles = {
+  overlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "#fff",
+    zIndex: 9999,
+  },
+  loaderBox: {
+    textAlign: "center",
+  },
+  spinner: {
+    width: "60px",
+    height: "60px",
+    border: "6px solid #fff",
+    borderTopColor: "transparent",
+    borderRadius: "50%",
+    animation: "spin 1s linear infinite",
+    margin: "0 auto",
+  },
+};
+
+// 🔁 Animação CSS
+const sheet = document.styleSheets[0];
+sheet.insertRule(
+  "@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }",
+  sheet.cssRules.length
+);
 
 export default Fiscal;
