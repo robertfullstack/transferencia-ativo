@@ -234,7 +234,7 @@ export default function Consultar() {
               >
 
                 <p>
-                  <strong>Usuário:</strong> {s.nomeDocumentoSolicitante}
+                  <strong>Usuário:</strong> {s.usuario}
                 </p>
                 <p>
                   <strong>Categoria:</strong> {s.categoria}
@@ -255,15 +255,46 @@ export default function Consultar() {
                       fontSize: "14px",
                     }}
                   >
-                    <p style={{ fontWeight: "bold", marginBottom: "5px" }}>
+                    {/* <p style={{ fontWeight: "bold", marginBottom: "5px" }}>
                       Produto:
                     </p>
                     <p>
                       <strong>Código:</strong> {s.produto.codigo || "—"}
+
+
+
+                      <strong>Descriçãoaaa: {s.produto.descricao}
+                      </strong>
                     </p>
+
                     <p>
                       <strong>Descrição:</strong> {s.produto.descricao || "—"}
-                    </p>
+                    </p> */}
+
+
+                    {/* PRODUTO SALVO NO FIRESTORE */}
+                    <div
+                      style={{
+                        backgroundColor: "#e6f5e8",
+                        padding: "12px",
+                        borderRadius: "10px",
+                        marginTop: "12px",
+                        marginBottom: "12px",
+                        border: "1px solid #cfe9d1",
+                      }}
+                    >
+                      <p style={{ fontWeight: "bold", marginBottom: "6px" }}>Produto:</p>
+
+                      <p><strong>Código:</strong> {s.produto?.["Nº inventário"] || "—"}</p>
+
+                      <p>
+                        <strong>Descrição:</strong>{" "}
+                        {s.produto?.["Denominação do imobilizado"] || "—"}
+                      </p>
+
+                      <p><strong>Empresa:</strong> {s.produto?.["Empr"] || "—"}</p>
+                    </div>
+
                     {s.produto.preco && (
                       <p>
                         <strong>Preço:</strong> R$ {s.produto.preco}

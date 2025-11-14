@@ -67,7 +67,7 @@ const Fiscal = () => {
     }
   };
 
-  // 🔥🔥🔥 LOADER PROFESSIONAL (IGUAL AO DA BASE) 🔥
+  // 🔥🔥🔥 LOADER PROFESSIONAL (IGUAL AO DA BASE) 🔥🔥🔥
   if (carregando) {
     return (
       <div style={styles.overlay}>
@@ -107,6 +107,13 @@ const Fiscal = () => {
                 border: "1px solid #eee",
               }}
             >
+              {/* <h3 style={{ marginBottom: "10px", color: "#000" }}>
+                Produto: <span style={{ color: "#333" }}>{sol.produto?.descricao || "—"}</span>
+              </h3>
+
+              <p><strong>Código:</strong> {sol.codigoBarras || sol.produto?.codigo || "—"}</p> */}
+
+
               <h3 style={{ marginBottom: "10px", color: "#000" }}>
                 Produto: <span style={{ color: "#333" }}>{sol.produto?.descricao || "—"}</span>
               </h3>
@@ -119,6 +126,11 @@ const Fiscal = () => {
               <p><strong>Motivo:</strong> {sol.motivo || "—"}</p>
               <p><strong>Valor:</strong> R$ {sol.valor || "—"}</p>
               <p><strong>Loja:</strong> {sol.loja || "—"}</p>
+              <p>
+                <strong>Descrição:</strong>{" "}
+                {sol.produto?.["Denominação do imobilizado"] || "—"}
+              </p>
+
 
               <p>
                 <strong>Status:</strong>{" "}
