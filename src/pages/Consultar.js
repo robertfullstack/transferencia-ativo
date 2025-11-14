@@ -234,10 +234,13 @@ export default function Consultar() {
               >
 
                 <p>
-                  <strong>Usuário:</strong> {s.usuario}
+                  <strong>Solicitante:</strong> {s.usuario}
                 </p>
                 <p>
-                  <strong>Categoria:</strong> {s.categoria}
+                  <strong>Cargo:</strong> {s.categoria}
+                </p>
+                <p>
+                  <strong>Origem:</strong> {s.origem}
                 </p>
                 <p>
                   <strong>Loja/Destino:</strong> {s.destino || "—"}</p>
@@ -283,7 +286,7 @@ export default function Consultar() {
                         border: "1px solid #cfe9d1",
                       }}
                     >
-                      <p style={{ fontWeight: "bold", marginBottom: "6px" }}>Produto:</p>
+                      <h3 style={{ fontWeight: "bold", marginBottom: "6px" }}>Informações Sobre Produto:</h3>
 
                       <p><strong>Código:</strong> {s.produto?.["Nº inventário"] || "—"}</p>
 
@@ -292,7 +295,9 @@ export default function Consultar() {
                         {s.produto?.["Denominação do imobilizado"] || "—"}
                       </p>
 
-                      <p><strong>Empresa:</strong> {s.produto?.["Empr"] || "—"}</p>
+                      {/* <p><strong>Empresa:</strong> {s.produto?.["Empr"] || "—"}</p> */}
+
+                      <p><strong>Data de Aquisição:</strong> FALTA NA BASE!</p>
                     </div>
 
                     {s.produto.preco && (
@@ -404,13 +409,11 @@ export default function Consultar() {
                   </div>
                 ) : (
                   <p>
-                    <strong>Produto Base Excel:</strong> Não encontrado
+                    {/* <strong>Produto Base Excel:</strong> Não encontrado */}
                   </p>
                 )}
 
-                <p>
-                  <strong>Origem:</strong> {s.origem}
-                </p>
+
                 {/* <p>
                   <strong>Destino:</strong> {s.destino}
                 </p> */}
