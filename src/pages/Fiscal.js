@@ -46,26 +46,38 @@ const Fiscal = () => {
       return;
     }
 
+    const nomeUsuario = localStorage.getItem("nome");
+
     try {
       const reader = new FileReader();
+
       reader.onloadend = async () => {
         const base64String = reader.result;
+
         const docRef = doc(db, "solicitacoes", id);
 
         await updateDoc(docRef, {
           documentoFiscalBase64: base64String,
           nomeDocumento: file.name,
+
+          statusFiscal: "Aprovado",
+          aprovadoPorFiscal: nomeUsuario,      // ✅ AGORA FUNCIONA
+          dataAprovacaoFiscal: new Date(),
         });
 
-        alert("✅ Documento anexado com sucesso!");
+        alert("✅ Documento anexado e Fiscal aprovado!");
         buscarSolicitacoes();
       };
+
       reader.readAsDataURL(file);
+
     } catch (erro) {
       console.error("Erro ao anexar documento:", erro);
       alert("❌ Erro ao anexar documento fiscal!");
     }
   };
+
+
 
   // 🔥🔥🔥 LOADER PROFESSIONAL (IGUAL AO DA BASE) 🔥🔥🔥
   if (carregando) {

@@ -81,6 +81,33 @@ export default function Consultar() {
     }
   };
 
+  const atualizarStatusOperacoes = async (id, novoStatus) => {
+    const ref = doc(db, "solicitacoes", id);
+
+    await updateDoc(ref, {
+      statusOperacoes: novoStatus,
+      atualizadoPorOperacoes: usuario,
+      dataAprovacaoOperacoes: new Date(),
+    });
+
+    setSolicitacoes((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? {
+            ...item,
+            statusOperacoes: novoStatus,
+            dataAprovacaoOperacoes: new Date(),
+          }
+          : item
+      )
+    );
+
+    alert(
+      novoStatus === "Aprovado"
+        ? "✅ Operações aprovou!"
+        : "❌ Operações reprovou!"
+    );
+  };
 
   const carregarSolicitacoes = async (nomeUsuario, categoriaUsuario) => {
     try {
@@ -134,33 +161,53 @@ export default function Consultar() {
 
 
   // ======== Atualiza status (Supervisor aprova/reprova) ========
+  // ======== Atualiza status (Supervisor aprova/reprova) ========
   const atualizarStatus = async (id, novoStatus) => {
     try {
       const ref = doc(db, "solicitacoes", id);
-      await updateDoc(ref, { status: novoStatus });
 
-      // Atualiza status na tela
+      await updateDoc(ref, {
+        statusSupervisor: novoStatus,     // salva status do supervisor
+        dataAprovacaoSupervisor: new Date(), // data da aprovação
+        status: novoStatus, // status geral continua existindo
+      });
+
+      // Atualiza na tela
       setSolicitacoes((prev) =>
-        prev.map((s) => (s.id === id ? { ...s, status: novoStatus } : s))
+        prev.map((s) =>
+          s.id === id
+            ? {
+              ...s,
+              statusSupervisor: novoStatus,
+              status: novoStatus,
+              dataAprovacaoSupervisor: new Date(),
+            }
+            : s
+        )
       );
 
-      // ✅ Se aprovado → envia automaticamente para "transferencias"
+      // Se Supervisor aprovou → envia para operações (transferencias)
       if (novoStatus === "Aprovado") {
         const solicitacao = solicitacoes.find((s) => s.id === id);
+
         if (solicitacao) {
           await addDoc(collection(db, "transferencias"), {
             ...solicitacao,
             status: "Aprovado",
-            aprovadoPor: usuario,
-            dataAprovacao: new Date(),
+            aprovadoPorSupervisor: usuario,
+            dataAprovacaoSupervisor: new Date(),
           });
-          alert("✅ Transferência enviada para Operações com sucesso!");
+
+          alert("✅ Supervisor aprovou e a solicitação foi enviada para Operações!");
         }
+      } else {
+        alert("❌ Solicitação reprovada pelo Supervisor.");
       }
     } catch (error) {
-      console.error("Erro ao atualizar status:", error);
+      console.error("Erro ao atualizar status do Supervisor:", error);
     }
   };
+
 
 
   // Função para encontrar produto no base.xlsx pelo código (supondo a coluna 'codigo')
@@ -451,13 +498,159 @@ export default function Consultar() {
                   {s.nomeDocumentoSolicitante || "Abrir documento"}
                 </a>
 
+                <div className="timeline-container">
+
+                  <div className="timeline-horizontal">
+
+
+                    <div className="timeline-step">
+                      <div className="timeline-circle aprovado"></div>
+
+                      <div className="timeline-label">
+                        Criado por — {s.usuario}
+                      </div>
+
+                      <div className="timeline-time">
+                        {s.data?.toDate().toLocaleString("pt-BR")}
+                      </div>
+                    </div>
+
+
+
+
+                    <div className="timeline-step">
+                      <div
+                        className={`timeline-circle ${s.statusSupervisor?.toLowerCase() === "aprovado"
+                          ? "aprovado"
+                          : s.statusSupervisor?.toLowerCase() === "reprovado"
+                            ? "reprovado"
+                            : ""
+                          }`}
+                      ></div>
+
+                      <div className="timeline-label">
+                        Supervisor — {s.statusSupervisor || "Aguardando"}
+                      </div>
+
+                      {s.dataAprovacaoSupervisor && (
+                        <div className="timeline-time">
+                          {s.dataAprovacaoSupervisor?.toDate().toLocaleString("pt-BR")}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* === Operações === */}
+                    {/* === Operações === */}
+                    <div className="timeline-step">
+                      <div
+                        className={`timeline-circle ${s.statusOperacoes?.toLowerCase() === "aprovado"
+                          ? "aprovado"
+                          : s.statusOperacoes?.toLowerCase() === "reprovado"
+                            ? "reprovado"
+                            : ""
+                          }`}
+                      ></div>
+
+                      <div className="timeline-label">
+                        Operações — {s.statusOperacoes || "Aguardando"}
+                      </div>
+
+                      {s.dataAprovacaoOperacoes && (
+                        <div className="timeline-time">
+                          {s.dataAprovacaoOperacoes?.toDate().toLocaleString("pt-BR")}
+                        </div>
+                      )}
+                    </div>
+
+
+
+
+
+                    <div className="timeline-step">
+                      <div
+                        className={`timeline-circle ${s.statusContabil?.toLowerCase() === "aprovado"
+                          ? "aprovado"
+                          : s.statusContabil?.toLowerCase() === "reprovado"
+                            ? "reprovado"
+                            : ""
+                          }`}
+                      ></div>
+
+                      <div className="timeline-label">
+                        Contábil — {s.statusContabil || "Aguardando"}
+                      </div>
+
+                      {s.dataAprovacaoContabil && (
+                        <div className="timeline-time">
+                          {s.dataAprovacaoContabil?.toDate().toLocaleString("pt-BR")}
+                        </div>
+                      )}
+                    </div>
+
+                    <div
+                      className={`timeline-circle ${s.statusFiscal?.toLowerCase() === "aprovado"
+                          ? "aprovado"
+                          : s.statusFiscal?.toLowerCase() === "reprovado"
+                            ? "reprovado"
+                            : ""
+                        }`}
+                    ></div>
+
+
+                  </div>
+                </div>
+
 
                 <p style={{ fontSize: "13px", color: "#777" }}>
                   Criado em:{" "}
                   {s.data ? new Date(s.data.seconds * 1000).toLocaleString() : "—"}
                 </p>
 
-                {(categoria === "Supervisor" || categoria === "Operacoes") && (
+                {/* === BOTÕES PARA OPERAÇÕES === */}
+                {categoria === "Operacoes" && (
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      gap: "10px",
+                      marginTop: "10px",
+                    }}
+                  >
+                    <button
+                      onClick={() => atualizarStatusOperacoes(s.id, "Aprovado")}
+                      style={{
+                        backgroundColor: "green",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "6px",
+                        padding: "8px 14px",
+                        cursor: "pointer",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      ✅ Aprovar
+                    </button>
+
+                    <button
+                      onClick={() => atualizarStatusOperacoes(s.id, "Reprovado")}
+                      style={{
+                        backgroundColor: "red",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "6px",
+                        padding: "8px 14px",
+                        cursor: "pointer",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      ❌ Reprovar
+                    </button>
+                  </div>
+                )}
+
+
+
+                {(categoria === "Supervisor" || categoria === "OperacoesNAOUSAMAISISSO") && (
                   <div
                     style={{
                       display: "flex",
@@ -753,6 +946,16 @@ export default function Consultar() {
 }
 
 
+// =============================
+// 🔄 ANIMAÇÃO (SPINNER)
+// =============================
+const styleSheet = document.styleSheets[0];
+
+styleSheet.insertRule(
+  "@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }",
+  styleSheet.cssRules.length
+);
+
 const styles = {
   overlay: {
     position: "fixed",
@@ -782,9 +985,141 @@ const styles = {
   },
 };
 
-// 🔄 Animação CSS
-const styleSheet = document.styleSheets[0];
+// =======================================================
+// 🌟 TIMELINE — ESTILO SHOPEE (horizontal + vertical)
+// =======================================================
+
+// Container base
 styleSheet.insertRule(
-  "@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }",
+  `.timeline-container {
+    width: 100%;
+    margin-top: 20px;
+  }`,
+  styleSheet.cssRules.length
+);
+
+// ===============================
+// 🖥 DESKTOP — TIMELINE HORIZONTAL
+// ===============================
+styleSheet.insertRule(
+  `@media (min-width: 600px) {
+    .timeline-horizontal {
+      display: flex;
+      gap: 50px;
+      padding: 20px 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .timeline-horizontal::-webkit-scrollbar { display: none; }
+
+    .timeline-step {
+      text-align: center;
+      min-width: 160px;
+      position: relative;
+    }
+
+    .timeline-circle {
+      width: 18px;
+      height: 18px;
+      margin: 0 auto;
+      border-radius: 50%;
+      background: #bbb;
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 3px #ddd;
+      transition: 0.3s ease-in-out;
+    }
+
+    /* Status APROVADO */
+    .timeline-circle.aprovado {
+      background: #2d9e00;
+      box-shadow: 0 0 0 3px #2d9e00;
+    }
+
+    /* Status REPROVADO */
+    .timeline-circle.reprovado {
+      background: #d60000;
+      box-shadow: 0 0 0 3px #d60000;
+    }
+
+    .timeline-step::after {
+      content: "";
+      position: absolute;
+      top: 9px;
+      left: 100%;
+      width: 50px;
+      height: 3px;
+      background: #ddd;
+    }
+    .timeline-step:last-child::after { display: none; }
+
+    .timeline-label {
+      margin-top: 10px;
+      font-weight: bold;
+      color: #333;
+      font-size: 15px;
+    }
+    .timeline-time {
+      font-size: 13px;
+      color: #777;
+      margin-top: 4px;
+    }
+  }`,
+  styleSheet.cssRules.length
+);
+
+// ===============================
+// 📱 MOBILE — TIMELINE VERTICAL
+// ===============================
+styleSheet.insertRule(
+  `@media (max-width: 599px) {
+    .timeline-horizontal {
+      display: block;
+      border-left: 3px solid #ddd;
+      padding-left: 20px;
+      margin-left: 15px;
+    }
+
+    .timeline-step {
+      position: relative;
+      padding-bottom: 25px;
+    }
+
+    .timeline-circle {
+      width: 14px;
+      height: 14px;
+      background: #bbb;
+      border-radius: 50%;
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 3px #ddd;
+      position: absolute;
+      left: -32px;
+      top: 5px;
+      transition: 0.3s ease-in-out;
+    }
+
+    /* Aprovado */
+    .timeline-circle.aprovado {
+      background: #2d9e00;
+      box-shadow: 0 0 0 3px #2d9e00;
+    }
+
+    /* Reprovado */
+    .timeline-circle.reprovado {
+      background: #d60000;
+      box-shadow: 0 0 0 3px #d60000;
+    }
+
+    .timeline-label {
+      font-weight: bold;
+      color: #333;
+      font-size: 15px;
+    }
+
+    .timeline-time {
+      font-size: 12px;
+      margin-top: 3px;
+      color: #777;
+    }
+  }`,
   styleSheet.cssRules.length
 );
