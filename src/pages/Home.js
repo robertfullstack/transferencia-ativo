@@ -1,11 +1,11 @@
 import React from "react";
-import { FaExchangeAlt, FaSearch, FaInbox } from "react-icons/fa"; // 👈 adicionado o ícone
+import { FaExchangeAlt, FaSearch, FaInbox } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 export default function Home() {
   const navigate = useNavigate();
 
-  // 👇 Recupera categoria do usuário logado
+  // Recupera categoria do usuário logado
   const categoriaUsuario = localStorage.getItem("categoria");
 
   // Botões padrão
@@ -20,9 +20,14 @@ export default function Home() {
       icone: <FaSearch size={32} color="#000" />,
       rota: "/consultar",
     },
+    {
+      titulo: "Consultar Recebimentos",      // 👈 NOVO BOTÃO
+      icone: <FaInbox size={32} color="#000" />,
+      rota: "/consultar-recebimentos",
+    },
   ];
 
-  // 👇 Se for Adm Loja (Inicio...), adiciona o botão Recebidos
+  // Se for Adm Loja, adiciona RECEBIDOS
   if (categoriaUsuario === "Adm Loja (Inicio do processo de transferência)") {
     botoes.push({
       titulo: "Recebidos",

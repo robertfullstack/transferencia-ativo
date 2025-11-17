@@ -148,7 +148,7 @@ export default function Solicitar() {
 
         {/* Código do produto */}
         <div style={containerInput}>
-          <label style={labelEstilo(codigoBarras)}>Código do produto</label>
+          <label style={labelEstilo(codigoBarras)}>Número do Património</label>
           <input
             type="text"
             value={codigoBarras}

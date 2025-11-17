@@ -284,7 +284,7 @@ export default function Consultar() {
                   <strong>Solicitante:</strong> {s.usuario}
                 </p>
                 <p>
-                  <strong>Cargo:</strong> {s.categoria}
+                  <strong>Perfil:</strong> {s.categoria}
                 </p>
                 <p>
                   <strong>Origem:</strong> {s.origem}
@@ -589,10 +589,10 @@ export default function Consultar() {
 
                     <div
                       className={`timeline-circle ${s.statusFiscal?.toLowerCase() === "aprovado"
-                          ? "aprovado"
-                          : s.statusFiscal?.toLowerCase() === "reprovado"
-                            ? "reprovado"
-                            : ""
+                        ? "aprovado"
+                        : s.statusFiscal?.toLowerCase() === "reprovado"
+                          ? "reprovado"
+                          : ""
                         }`}
                     ></div>
 

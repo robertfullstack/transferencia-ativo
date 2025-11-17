@@ -9,6 +9,7 @@ import Consultar from "./pages/Consultar";
 import Base from "./pages/Base";
 import Recebidos from "./pages/Recebidos";
 import Fiscal from "./pages/Fiscal";
+import ConsultarRecebimentos from "./pages/ConsultarRecebimentos";
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
         <Route path="/recebidos" element={<Recebidos />} />
         <Route path="/recebidos" element={<Recebidos />} />
         <Route path="/fiscal" element={<Fiscal />} />
+        <Route path="/consultar-recebimentos" element={<ConsultarRecebimentos />} />
 
       </Routes>
     </Router>
