@@ -179,13 +179,69 @@ export default function Solicitar() {
         {/* Destino */}
         <div style={containerInput}>
           <label style={labelEstilo(destino)}>Destino</label>
-          <input
-            type="text"
+
+          <select
             value={destino}
             onChange={(e) => setDestino(e.target.value)}
-            style={inputAnimado()}
-          />
+            style={{
+              width: "100%",
+              padding: "12px",
+              marginBottom: "10px",
+              borderRadius: "6px",
+              border: "1px solid #aaa",
+              backgroundColor: "#fff",
+              color: "#000",
+              fontSize: "16px",
+              transition: "all 0.3s ease",
+            }}
+          >
+            <option value="-1" selected ></option>
+            <option value="1001">1001 - Matriz</option>
+            <option value="1002">1002 - Centro de Distribuição</option>
+            <option value="1003">1003 - Escritório - Suporte</option>
+            <option value="1021">1021 - Osasco - Primitiva Vianco</option>
+            <option value="1023">1023 - Sto. Amaro - Floriano Peixoto</option>
+            <option value="1024">1024 - Jabaquara</option>
+            <option value="1030">1030 - Penha</option>
+            <option value="1031">1031 - Suzano</option>
+            <option value="1032">1032 - 24 de Maio</option>
+            <option value="1034">1034 - Lapa</option>
+            <option value="1036">1036 - Aricanduva</option>
+            <option value="1037">1037 - Osasco</option>
+            <option value="1038">1038 - Mogi das Cruzes</option>
+            <option value="1039">1039 - Sto. Amaro - Adolfo Pinheiro</option>
+            <option value="1040">1040 - São Bernardo</option>
+            <option value="1041">1041 - Mauá Rua</option>
+            <option value="1042">1042 - Guarulhos - Dom Pedro II</option>
+            <option value="1043">1043 - Sto. André - Shopping Grand Plaza</option>
+            <option value="1044">1044 - Guarulhos - Shopping</option>
+            <option value="1045">1045 - Central Plaza Shopping</option>
+            <option value="1046">1046 - Sto. André - Oliveira Lima</option>
+            <option value="1047">1047 - Santos</option>
+            <option value="1049">1049 - Sto. Amaro - Largo 13 de Maio</option>
+            <option value="1050">1050 - Shopping Taboão</option>
+            <option value="1051">1051 - Shopping Interlagos</option>
+            <option value="1052">1052 - Vila Nova Cachoeirinha</option>
+            <option value="1053">1053 - São Miguel</option>
+            <option value="1054">1054 - Shopping Tatuapé</option>
+            <option value="1055">1055 - Shopping Itaquera</option>
+            <option value="1056">1056 - Itaquaquecetuba</option>
+            <option value="1057">1057 - São Vicente</option>
+            <option value="1058">1058 - Osasco - Shopping União</option>
+            <option value="1059">1059 - Diadema</option>
+            <option value="1060">1060 - Capão Redondo</option>
+            <option value="1061">1061 - Mauá - Shopping Mauá</option>
+            <option value="1062">1062 - Campinas</option>
+            <option value="1065">1065 - Sto André - Shopping Atrium</option>
+            <option value="1067">1067 - M Boi Mirim</option>
+            <option value="1068">1068 - Shopping Cantareira</option>
+            <option value="1069">1069 - São Mateus</option>
+            <option value="1070">1070 - Parelheiros</option>
+            <option value="1071">1071 - Shopping Aricanduva</option>
+            <option value="1072">1072 - e-commerce</option>
+          </select>
         </div>
+
 
         {/* Motivo */}
         <div style={containerInput}>

@@ -71,44 +71,77 @@ const ConsultarRecebimentos = () => {
                         }}
                     >
 
-                        <h3>📄 Registro: {item.id}</h3>
+                        <h3>Registro: {item.id}</h3>
 
-                        <p><strong>Usuário:</strong> {item.usuario}</p>
-                        <p><strong>Origem:</strong> {item.origem}</p>
-                        <p><strong>Destino:</strong> {item.destino}</p>
-                        <p><strong>Loja:</strong> {item.loja}</p>
+                        <p><strong>Solicitante:</strong> {item.usuario}, {item.categoria}</p>
+                        <p><strong>Origem do Item:</strong> {item.origem}</p>
+                        <p><strong>Destino do Item:</strong> {item.destino}</p>
+                        {/* <p><strong>Loja:</strong> {item.loja}</p> */}
                         <p><strong>Status Geral:</strong> {item.status}</p>
 
                         <p><strong>Motivo:</strong> {item.motivo}</p>
-                        <p><strong>Categoria:</strong> {item.categoria}</p>
-                        <p><strong>Valor:</strong> {item.valor}</p>
-                        <p><strong>Código de Barras:</strong> {item.codigoBarras}</p>
 
-                        <p><strong>Aprovado por Supervisor:</strong> {item.statusSupervisor}</p>
-                        <p><strong>Aprovado por Fiscal:</strong> {item.statusFiscal}</p>
-                        <p><strong>Aprovado por Contábil:</strong> {item.statusContabil}</p>
-                        <p><strong>Aprovado por Operações:</strong> {item.statusOperacoes}</p>
-
-                        <p><strong>Data Solicitação:</strong> {String(item.data)}</p>
-                        <p><strong>Data Supervisor:</strong> {String(item.dataAprovacaoSupervisor)}</p>
-                        <p><strong>Data Fiscal:</strong> {String(item.dataAprovacaoFiscal)}</p>
-                        <p><strong>Data Contábil:</strong> {String(item.dataAprovacaoContabil)}</p>
-                        <p><strong>Data Operações:</strong> {String(item.dataAprovacaoOperacoes)}</p>
-
-                        <hr />
-
-                        <h4>📦 Produto</h4>
-                        <p><strong>Produto Código:</strong> {item.produto?.produtoCodigo}</p>
-                        <p><strong>Produto Descrição:</strong> {item.produto?.produtoDescricao}</p>
+                        <p><strong>Código do Produto:</strong> {item.codigoBarras}</p>
+                        <p><strong>Descrição do Produto:</strong> {item.produto?.["Denominação do imobilizado"]}</p>
                         <p><strong>Nº Inventário:</strong> {item.produto?.["Nº inventário"]}</p>
-                        <p><strong>Denominação:</strong> {item.produto?.["Denominação do imobilizado"]}</p>
                         <p><strong>Empresa:</strong> {item.produto?.Empr}</p>
 
+                        <p><strong>Valor:</strong> R$ {item.valor}</p>
+
+
+                        <p>
+                            <strong>Data Solicitação:</strong>{" "}
+                            {item.data ? item.data.toDate().toLocaleString("pt-BR") : "Sem data"}
+                        </p>
+
+                        <p>
+                            <strong>Aprovado por Supervisor:</strong> {item.statusSupervisor},{" "}
+                            {item.dataAprovacaoSupervisor
+                                ? item.dataAprovacaoSupervisor.toDate().toLocaleString("pt-BR")
+                                : "Sem data"}
+                        </p>
+
+                        <p>
+                            <strong>Aprovado por Operações:</strong> {item.statusOperacoes},{" "}
+                            {item.dataAprovacaoOperacoes
+                                ? item.dataAprovacaoOperacoes.toDate().toLocaleString("pt-BR")
+                                : "Sem data"}
+                        </p>
+
+                        <p>
+                            <strong>Aprovado por Contábil:</strong> {item.statusContabil},{" "}
+                            {item.dataAprovacaoContabil
+                                ? item.dataAprovacaoContabil.toDate().toLocaleString("pt-BR")
+                                : "Sem data"}
+                        </p>
+
+                        <p>
+                            <strong>Aprovado por Fiscal:</strong> {item.statusFiscal},{" "}
+                            {item.dataAprovacaoFiscal
+                                ? item.dataAprovacaoFiscal.toDate().toLocaleString("pt-BR")
+                                : "Sem data"}
+                        </p>
+
                         <hr />
 
-                        <p><strong>Nome Documento:</strong> {item.nomeDocumento}</p>
+                        <p>
+                            <strong>Nome Documento:</strong>{" "}
+                            {item.documentoFiscalBase64 ? (
+                                <a
+                                    href={item.documentoFiscalBase64}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    style={{ color: "blue", textDecoration: "underline" }}
+                                >
+                                    {item.nomeDocumento}
+                                </a>
+                            ) : (
+                                item.nomeDocumento || "Nenhum documento"
+                            )}
+                        </p>
 
-                        {item.arquivoURL && (
+
+                        {/* {item.arquivoURL && (
                             <a
                                 href={item.arquivoURL}
                                 target="_blank"
@@ -117,7 +150,7 @@ const ConsultarRecebimentos = () => {
                             >
                                 📎 Abrir Documento
                             </a>
-                        )}
+                        )} */}
                     </div>
                 ))
             )}
