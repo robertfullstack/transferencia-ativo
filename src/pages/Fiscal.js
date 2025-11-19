@@ -7,7 +7,9 @@ const Fiscal = () => {
   const navigate = useNavigate();
   const [solicitacoes, setSolicitacoes] = useState([]);
   const [carregando, setCarregando] = useState(true);
-  const [arquivo, setArquivo] = useState({});
+
+  const [selecionados, setSelecionados] = useState([]); // 🔥 IDs selecionados
+  const [arquivoUnico, setArquivoUnico] = useState(null); // 🔥 Arquivo único
 
   useEffect(() => {
     const categoria = localStorage.getItem("usuarioCategoria");
@@ -35,51 +37,50 @@ const Fiscal = () => {
     }
   };
 
-  const handleFileChange = (id, file) => {
-    setArquivo((prev) => ({ ...prev, [id]: file }));
+  const toggleSelecionado = (id) => {
+    setSelecionados((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
   };
 
-  const handleUpload = async (id) => {
-    const file = arquivo[id];
-    if (!file) {
-      alert("⚠️ Selecione um arquivo primeiro!");
+  const handleUploadMultiplo = async () => {
+    if (!arquivoUnico) {
+      alert("⚠️ Selecione um arquivo para anexar!");
+      return;
+    }
+    if (selecionados.length === 0) {
+      alert("⚠️ Nenhuma solicitação selecionada!");
       return;
     }
 
     const nomeUsuario = localStorage.getItem("nome");
 
-    try {
-      const reader = new FileReader();
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64String = reader.result;
 
-      reader.onloadend = async () => {
-        const base64String = reader.result;
-
+      for (const id of selecionados) {
         const docRef = doc(db, "solicitacoes", id);
 
         await updateDoc(docRef, {
           documentoFiscalBase64: base64String,
-          nomeDocumento: file.name,
-
+          nomeDocumento: arquivoUnico.name,
           statusFiscal: "Aprovado",
-          aprovadoPorFiscal: nomeUsuario,      // ✅ AGORA FUNCIONA
+          aprovadoPorFiscal: nomeUsuario,
           dataAprovacaoFiscal: new Date(),
         });
+      }
 
-        alert("✅ Documento anexado e Fiscal aprovado!");
-        buscarSolicitacoes();
-      };
+      alert(`✅ Documento anexado a ${selecionados.length} solicitações!`);
 
-      reader.readAsDataURL(file);
+      setSelecionados([]);
+      setArquivoUnico(null);
+      buscarSolicitacoes();
+    };
 
-    } catch (erro) {
-      console.error("Erro ao anexar documento:", erro);
-      alert("❌ Erro ao anexar documento fiscal!");
-    }
+    reader.readAsDataURL(arquivoUnico);
   };
 
-
-
-  // 🔥🔥🔥 LOADER PROFESSIONAL (IGUAL AO DA BASE) 🔥🔥🔥
   if (carregando) {
     return (
       <div style={styles.overlay}>
@@ -93,40 +94,71 @@ const Fiscal = () => {
 
   return (
     <div style={{ padding: "30px", fontFamily: "Arial, sans-serif" }}>
-      <h2 style={{ marginBottom: "20px", textAlign: "center" }}>📋 Painel do Fiscal</h2>
-      <p style={{ textAlign: "center", marginBottom: "30px" }}>
-        Exibindo apenas solicitações com status <b>"Aprovado"</b>
-      </p>
 
-      {solicitacoes.length === 0 ? (
-        <p style={{ textAlign: "center" }}>Nenhuma solicitação aprovada encontrada.</p>
-      ) : (
-        <div
+      <h2 style={{ textAlign: "center" }}>📋 Painel do Fiscal</h2>
+
+      {/* 🔥 Área de upload único */}
+      <div style={{ 
+        background: "#fff",
+        padding: 20,
+        marginBottom: 25,
+        borderRadius: 12,
+        boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+      }}>
+        <h3>📎 Anexar documento para várias solicitações</h3>
+
+        <input 
+          type="file"
+          onChange={(e) => setArquivoUnico(e.target.files[0])}
+          style={{ marginTop: 10 }}
+        />
+
+        <button
+          onClick={handleUploadMultiplo}
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(380px, 1fr))",
-            gap: "20px",
+            background: "green",
+            color: "#fff",
+            padding: "8px 16px",
+            borderRadius: 6,
+            border: "none",
+            cursor: "pointer",
+            marginLeft: 10
           }}
         >
-          {solicitacoes.map((sol) => (
-            <div
-              key={sol.id}
-              style={{
-                background: "#fff",
-                padding: "20px",
-                borderRadius: "12px",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                border: "1px solid #eee",
-              }}
-            >
-              {/* <h3 style={{ marginBottom: "10px", color: "#000" }}>
-                Produto: <span style={{ color: "#333" }}>{sol.produto?.descricao || "—"}</span>
-              </h3>
+          Enviar para Selecionadas ({selecionados.length})
+        </button>
+      </div>
 
-              <p><strong>Código:</strong> {sol.codigoBarras || sol.produto?.codigo || "—"}</p> */}
+      {/* 🔥 Lista das solicitações */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(380px, 1fr))",
+          gap: "20px",
+        }}
+      >
+        {solicitacoes.map((sol) => (
+          <div
+            key={sol.id}
+            style={{
+              background: "#fff",
+              padding: "20px",
+              borderRadius: "12px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+              border: selecionados.includes(sol.id)
+                ? "2px solid green"
+                : "1px solid #ccc",
+            }}
+          >
+            {/* 🔥 Checkbox */}
+            <input 
+              type="checkbox"
+              checked={selecionados.includes(sol.id)}
+              onChange={() => toggleSelecionado(sol.id)}
+              style={{ transform: "scale(1.4)", marginBottom: 10 }}
+            />
 
-
-              <h3 style={{ marginBottom: "10px", color: "#000" }}>
+           <h3 style={{ marginBottom: "10px", color: "#000" }}>
                 Produto: <span style={{ color: "#333" }}>{sol.produto?.descricao || "—"}</span>
               </h3>
 
@@ -151,49 +183,25 @@ const Fiscal = () => {
 
               <hr style={{ margin: "15px 0" }} />
 
-              {sol.documentoFiscalBase64 ? (
-                <p>
-                  📎 Documento anexado:{" "}
-                  <a
-                    href={sol.documentoFiscalBase64}
-                    download={sol.nomeDocumento || "documentoFiscal"}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {sol.nomeDocumento || "Abrir documento"}
-                  </a>
-                </p>
-              ) : (
-                <div>
-                  <input
-                    type="file"
-                    onChange={(e) => handleFileChange(sol.id, e.target.files[0])}
-                    style={{ marginBottom: "10px" }}
-                  />
-                  <button
-                    onClick={() => handleUpload(sol.id)}
-                    style={{
-                      backgroundColor: "#007bff",
-                      color: "#fff",
-                      border: "none",
-                      padding: "8px 16px",
-                      borderRadius: "6px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Enviar Documento Fiscal
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+            {sol.documentoFiscalBase64 ? (
+              <p>
+                📎 Documento:{" "}
+                <a href={sol.documentoFiscalBase64} download={sol.nomeDocumento} target="_blank">
+                  {sol.nomeDocumento}
+                </a>
+              </p>
+            ) : (
+              <p style={{ opacity: 0.6 }}>Nenhum documento anexado ainda</p>
+            )}
+          </div>
+        ))}
+      </div>
+
     </div>
   );
 };
 
-// ======== ESTILOS DO LOADER (MESMO DA BASE) ========
+// Loader
 const styles = {
   overlay: {
     position: "fixed",
@@ -209,9 +217,7 @@ const styles = {
     color: "#fff",
     zIndex: 9999,
   },
-  loaderBox: {
-    textAlign: "center",
-  },
+  loaderBox: { textAlign: "center" },
   spinner: {
     width: "60px",
     height: "60px",
@@ -222,12 +228,5 @@ const styles = {
     margin: "0 auto",
   },
 };
-
-// 🔁 Animação CSS
-const sheet = document.styleSheets[0];
-sheet.insertRule(
-  "@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }",
-  sheet.cssRules.length
-);
 
 export default Fiscal;
