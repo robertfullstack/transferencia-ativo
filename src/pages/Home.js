@@ -6,10 +6,10 @@ export default function Home() {
   const navigate = useNavigate();
 
   // Recupera categoria do usuário logado
-  const categoriaUsuario = localStorage.getItem("categoria");
+  const categoriaUsuario = localStorage.getItem("usuarioCategoria");
 
   // Botões padrão
-  const botoes = [
+  let botoes = [
     {
       titulo: "Solicitar Transferência",
       icone: <FaExchangeAlt size={32} color="#000" />,
@@ -21,20 +21,26 @@ export default function Home() {
       rota: "/consultar",
     },
     {
-      titulo: "Consultar Recebimentos",      // 👈 NOVO BOTÃO
+      titulo: "Consultar Recebimentos",
       icone: <FaInbox size={32} color="#000" />,
       rota: "/consultar-recebimentos",
     },
   ];
+  // // Se for Adm Loja, adiciona botão Recebidos
+  // if (categoriaUsuario === "Adm Loja (Inicio do processo de transferência)") {
+  //   botoes.push({
+  //     titulo: "Recebidos",
+  //     icone: <FaInbox size={32} color="#000" />,
+  //     rota: "/recebidos",
+  //   });
+  // }
 
-  // Se for Adm Loja, adiciona RECEBIDOS
-  if (categoriaUsuario === "Adm Loja (Inicio do processo de transferência)") {
-    botoes.push({
-      titulo: "Recebidos",
-      icone: <FaInbox size={32} color="#000" />,
-      rota: "/recebidos",
-    });
-  }
+  // Define quais botões são restritos apenas para Adm Loja
+  const botoesRestritos = [
+    "Solicitar Transferência",
+    "Consultar Recebimentos",
+    "Recebidos",
+  ];
 
   return (
     <div
@@ -62,35 +68,47 @@ export default function Home() {
           maxWidth: "600px",
         }}
       >
-        {botoes.map((botao, index) => (
-          <div
-            key={index}
-            onClick={() => navigate(botao.rota)}
-            style={{
-              backgroundColor: "#f7f7f7",
-              borderRadius: "12px",
-              boxShadow: "0 0 10px rgba(0,0,0,0.1)",
-              padding: "25px",
-              textAlign: "center",
-              cursor: "pointer",
-              transition: "0.3s",
-              border: "1px solid #ddd",
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = "#000";
-              e.currentTarget.style.color = "#fff";
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = "#f7f7f7";
-              e.currentTarget.style.color = "#000";
-            }}
-          >
-            <div style={{ marginBottom: "10px" }}>{botao.icone}</div>
-            <p style={{ fontSize: "15px", fontWeight: "bold" }}>
-              {botao.titulo}
-            </p>
-          </div>
-        ))}
+        {botoes.map((botao, index) => {
+          // Só bloqueia os botões restritos
+          const clicavel =
+            !botoesRestritos.includes(botao.titulo) ||
+            categoriaUsuario === "Adm Loja (Inicio do processo de transferência)";
+
+          return (
+            <div
+              key={index}
+              onClick={clicavel ? () => navigate(botao.rota) : undefined}
+              style={{
+                backgroundColor: "#f7f7f7",
+                borderRadius: "12px",
+                boxShadow: "0 0 10px rgba(0,0,0,0.1)",
+                padding: "25px",
+                textAlign: "center",
+                cursor: clicavel ? "pointer" : "not-allowed",
+                transition: "0.3s",
+                border: "1px solid #ddd",
+                opacity: clicavel ? 1 : 0.6,
+              }}
+              onMouseOver={(e) => {
+                if (clicavel) {
+                  e.currentTarget.style.backgroundColor = "#000";
+                  e.currentTarget.style.color = "#fff";
+                }
+              }}
+              onMouseOut={(e) => {
+                if (clicavel) {
+                  e.currentTarget.style.backgroundColor = "#f7f7f7";
+                  e.currentTarget.style.color = "#000";
+                }
+              }}
+            >
+              <div style={{ marginBottom: "10px" }}>{botao.icone}</div>
+              <p style={{ fontSize: "15px", fontWeight: "bold" }}>
+                {botao.titulo}
+              </p>
+            </div>
+          );
+        })}
       </div>
 
       <button

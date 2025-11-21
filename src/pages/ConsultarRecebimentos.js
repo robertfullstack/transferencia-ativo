@@ -1,54 +1,65 @@
 import React, { useEffect, useState } from "react";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, getDocs, query, where, updateDoc, doc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
+import confetti from "canvas-confetti"; // 🔥 biblioteca para fogos
 
 const ConsultarRecebimentos = () => {
     const [recebimentos, setRecebimentos] = useState([]);
     const [carregando, setCarregando] = useState(true);
 
     useEffect(() => {
-        const fetchRecebimentos = async () => {
-            setCarregando(true);
-
-            // pega a loja do usuário logado
-            const destinoLoja = localStorage.getItem("usuarioLoja");
-
-            console.log("📌 Loja logada:", destinoLoja);
-
-            if (!destinoLoja) {
-                console.log("Nenhum perfil de loja encontrado no localStorage.");
-                setCarregando(false);
-                return;
-            }
-
-            try {
-                // consulta no Firestore
-                const q = query(
-                    collection(db, "solicitacoes"),
-                    where("destino", "==", destinoLoja)
-                );
-
-                const snapshot = await getDocs(q);
-
-                console.log("📦 Total encontrados:", snapshot.size);
-
-                const dados = snapshot.docs.map(doc => {
-                    return {
-                        id: doc.id,
-                        ...doc.data()
-                    };
-                });
-
-                setRecebimentos(dados);
-            } catch (erro) {
-                console.log("❌ Erro ao buscar recebimentos:", erro);
-            }
-
-            setCarregando(false);
-        };
-
         fetchRecebimentos();
     }, []);
+
+    const fetchRecebimentos = async () => {
+        setCarregando(true);
+        const destinoLoja = localStorage.getItem("usuarioLoja");
+
+        if (!destinoLoja) {
+            setCarregando(false);
+            return;
+        }
+
+        try {
+            const q = query(
+                collection(db, "solicitacoes"),
+                where("destino", "==", destinoLoja)
+            );
+            const snapshot = await getDocs(q);
+            const dados = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setRecebimentos(dados);
+        } catch (erro) {
+            console.log("❌ Erro ao buscar recebimentos:", erro);
+        }
+
+        setCarregando(false);
+    };
+
+    const handleRecebimento = async (itemId) => {
+        try {
+            const docRef = doc(db, "solicitacoes", itemId);
+            const usuario = localStorage.getItem("nome") || "Usuário";
+
+            await updateDoc(docRef, {
+                status: "Recebimento Concluído",
+                recebidoPorLoja: usuario,
+                dataRecebimento: new Date()
+            });
+
+            // 🎆 Animação de fogos
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 },
+            });
+
+            alert("✅ Recebimento registrado e enviado para o Fiscal!");
+            fetchRecebimentos();
+        } catch (erro) {
+            console.error("❌ Erro ao atualizar recebimento:", erro);
+            alert("❌ Erro ao registrar recebimento.");
+        }
+    };
 
     if (carregando) return <p>Carregando recebimentos...</p>;
 
@@ -139,22 +150,33 @@ const ConsultarRecebimentos = () => {
                                 item.nomeDocumento || "Nenhum documento"
                             )}
                         </p>
-
-
-                        {/* {item.arquivoURL && (
-                            <a
-                                href={item.arquivoURL}
-                                target="_blank"
-                                rel="noreferrer"
-                                style={{ color: "blue", fontWeight: "bold" }}
+                        {/* Botão para registrar recebimento */}
+                        {item.status !== "Recebimento Concluído" ? (
+                            <button
+                                onClick={() => handleRecebimento(item.id)}
+                                style={{
+                                    marginTop: 10,
+                                    backgroundColor: "green",
+                                    color: "#fff",
+                                    padding: "8px 16px",
+                                    border: "none",
+                                    borderRadius: 6,
+                                    cursor: "pointer"
+                                }}
                             >
-                                📎 Abrir Documento
-                            </a>
-                        )} */}
+                                Ok, recebimento realizado
+                            </button>
+                        ) : (
+                            <p style={{ fontWeight: "bold", color: "blue", marginTop: 10 }}>
+                                ✅ Recebimento Concluído
+                            </p>
+                        )}
+
+                        <hr style={{ marginTop: 15 }} />
                     </div>
                 ))
             )}
-        </div>
+        </div >
     );
 };
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { collection, getDocs, query, where, updateDoc, doc } from "firebase/firestore";
+import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 
 const Fiscal = () => {
@@ -8,8 +8,8 @@ const Fiscal = () => {
   const [solicitacoes, setSolicitacoes] = useState([]);
   const [carregando, setCarregando] = useState(true);
 
-  const [selecionados, setSelecionados] = useState([]); // 🔥 IDs selecionados
-  const [arquivoUnico, setArquivoUnico] = useState(null); // 🔥 Arquivo único
+  const [selecionados, setSelecionados] = useState([]); // IDs selecionados
+  const [arquivoUnico, setArquivoUnico] = useState(null); // Arquivo único
 
   useEffect(() => {
     const categoria = localStorage.getItem("usuarioCategoria");
@@ -20,15 +20,16 @@ const Fiscal = () => {
     }
   }, [navigate]);
 
+  // Buscar todas as solicitações (independente do status)
   const buscarSolicitacoes = async () => {
     try {
-      const q = query(collection(db, "solicitacoes"), where("status", "==", "Aprovado"));
-      const querySnapshot = await getDocs(q);
+      const querySnapshot = await getDocs(collection(db, "solicitacoes"));
 
       const lista = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
+
       setSolicitacoes(lista);
     } catch (erro) {
       console.error("Erro ao carregar solicitações:", erro);
@@ -94,20 +95,21 @@ const Fiscal = () => {
 
   return (
     <div style={{ padding: "30px", fontFamily: "Arial, sans-serif" }}>
+      <h2 style={{ textAlign: "center" }}>---- Painel do Fiscal Geral ----</h2>
 
-      <h2 style={{ textAlign: "center" }}>📋 Painel do Fiscal</h2>
+      {/* Upload de Nota Fiscal */}
+      <div
+        style={{
+          background: "#fff",
+          padding: 20,
+          marginBottom: 25,
+          borderRadius: 12,
+          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+        }}
+      >
+        <h3>Anexar Nota Fiscal Para as Solicitações</h3>
 
-      {/* 🔥 Área de upload único */}
-      <div style={{ 
-        background: "#fff",
-        padding: 20,
-        marginBottom: 25,
-        borderRadius: 12,
-        boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
-      }}>
-        <h3>📎 Anexar documento para várias solicitações</h3>
-
-        <input 
+        <input
           type="file"
           onChange={(e) => setArquivoUnico(e.target.files[0])}
           style={{ marginTop: 10 }}
@@ -122,14 +124,14 @@ const Fiscal = () => {
             borderRadius: 6,
             border: "none",
             cursor: "pointer",
-            marginLeft: 10
+            marginLeft: 10,
           }}
         >
           Enviar para Selecionadas ({selecionados.length})
         </button>
       </div>
 
-      {/* 🔥 Lista das solicitações */}
+      {/* Lista de solicitações */}
       <div
         style={{
           display: "grid",
@@ -150,43 +152,55 @@ const Fiscal = () => {
                 : "1px solid #ccc",
             }}
           >
-            {/* 🔥 Checkbox */}
-            <input 
+            {/* Checkbox */}
+            <input
               type="checkbox"
               checked={selecionados.includes(sol.id)}
               onChange={() => toggleSelecionado(sol.id)}
               style={{ transform: "scale(1.4)", marginBottom: 10 }}
             />
 
-           <h3 style={{ marginBottom: "10px", color: "#000" }}>
-                Produto: <span style={{ color: "#333" }}>{sol.produto?.descricao || "—"}</span>
-              </h3>
+            <h3 style={{ marginBottom: "10px", color: "#000" }}>
+              Registro: <span style={{ color: "#333" }}>{sol.id}</span>
+            </h3>
 
-              <p><strong>Código:</strong> {sol.codigoBarras || sol.produto?.codigo || "—"}</p>
-              <p><strong>Usuário:</strong> {sol.usuario || "—"}</p>
-              <p><strong>Categoria:</strong> {sol.categoria || "—"}</p>
-              <p><strong>Origem:</strong> {sol.origem || "—"}</p>
-              <p><strong>Destino:</strong> {sol.destino || "—"}</p>
-              <p><strong>Motivo:</strong> {sol.motivo || "—"}</p>
-              <p><strong>Valor:</strong> R$ {sol.valor || "—"}</p>
-              <p><strong>Loja:</strong> {sol.loja || "—"}</p>
-              <p>
-                <strong>Descrição:</strong>{" "}
-                {sol.produto?.["Denominação do imobilizado"] || "—"}
+            <p>
+              <strong>Descrição:</strong>{" "}
+              {sol.produto?.["Denominação do imobilizado"] || "—"}
+            </p>
+            <p>
+              <strong>Código:</strong> {sol.codigoBarras || sol.produto?.codigo || "—"}
+            </p>
+            <p><strong>Usuário Solicitante:</strong> {sol.usuario || "—"}</p>
+            <p><strong>Categoria:</strong> {sol.categoria || "—"}</p>
+            <p><strong>Loja/Origem:</strong> {sol.origem || "—"}</p>
+            <p><strong>Loja/Destino:</strong> {sol.destino || "—"}</p>
+            <p><strong>Motivo:</strong> {sol.motivo || "—"}</p>
+            <p><strong>Valor:</strong> R$ {sol.valor || "—"}</p>
+
+            <p>
+              <strong>Status Geral:</strong>{" "}
+              <span style={{ fontWeight: "bold", color: "green" }}>{sol.status}</span>
+            </p>
+
+            {/* Mostra se a loja já concluiu */}
+            {sol.statusLoja === "Concluída" && (
+              <p style={{ color: "blue", fontWeight: "bold" }}>
+                ✅ Pedido concluído pela loja
               </p>
+            )}
 
-
-              <p>
-                <strong>Status:</strong>{" "}
-                <span style={{ fontWeight: "bold", color: "green" }}>{sol.status}</span>
-              </p>
-
-              <hr style={{ margin: "15px 0" }} />
+            <hr style={{ margin: "15px 0" }} />
 
             {sol.documentoFiscalBase64 ? (
               <p>
-                📎 Documento:{" "}
-                <a href={sol.documentoFiscalBase64} download={sol.nomeDocumento} target="_blank">
+                📎 Documento/Nota Fiscal:{" "}
+                <a
+                  href={sol.documentoFiscalBase64}
+                  download={sol.nomeDocumento}
+                  target="_blank"
+                  rel="noreferrer"
+                >
                   {sol.nomeDocumento}
                 </a>
               </p>
@@ -196,7 +210,6 @@ const Fiscal = () => {
           </div>
         ))}
       </div>
-
     </div>
   );
 };

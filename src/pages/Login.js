@@ -148,16 +148,16 @@ export default function Login() {
         }}
       >
 
-                  <img
-            src={Logo} // coloque aqui o nome exato do arquivo da sua logo
-            alt="Logo"
-            style={{
-              width: "120px",
-              marginBottom: "-30px",
-              marginTop: "-30px",
-              opacity: 0.95, // deixa mais suave
-            }}
-          />
+        <img
+          src={Logo} // coloque aqui o nome exato do arquivo da sua logo
+          alt="Logo"
+          style={{
+            width: "120px",
+            marginBottom: "-30px",
+            marginTop: "-30px",
+            opacity: 0.95, // deixa mais suave
+          }}
+        />
         <div>Controle de Ativos - Transferência de Ativos</div>
         <div>Versão 1.8 - 17/11/2025</div>
       </div>
