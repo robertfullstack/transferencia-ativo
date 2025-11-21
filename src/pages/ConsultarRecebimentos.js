@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { collection, getDocs, query, where, updateDoc, doc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
-import confetti from "canvas-confetti"; // 🔥 biblioteca para fogos
+import confetti from "canvas-confetti";
+import { ToastContainer, toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 const ConsultarRecebimentos = () => {
     const [recebimentos, setRecebimentos] = useState([]);
@@ -30,6 +32,7 @@ const ConsultarRecebimentos = () => {
             setRecebimentos(dados);
         } catch (erro) {
             console.log("❌ Erro ao buscar recebimentos:", erro);
+            toast.error("Erro ao buscar recebimentos!");
         }
 
         setCarregando(false);
@@ -38,7 +41,14 @@ const ConsultarRecebimentos = () => {
     const handleRecebimento = async (itemId) => {
         try {
             const docRef = doc(db, "solicitacoes", itemId);
-            const usuario = localStorage.getItem("nome") || "Usuário";
+
+            // 🔹 Pegar o nome do usuário logado pelo mesmo que o form de Solicitar usa
+            const usuario = localStorage.getItem("usuarioNome");
+
+            if (!usuario) {
+                toast.error("❌ Usuário não identificado! Faça login novamente.");
+                return;
+            }
 
             await updateDoc(docRef, {
                 status: "Recebimento Concluído",
@@ -46,18 +56,18 @@ const ConsultarRecebimentos = () => {
                 dataRecebimento: new Date()
             });
 
-            // 🎆 Animação de fogos
+            // 🎆 Confetti
             confetti({
                 particleCount: 100,
                 spread: 70,
                 origin: { y: 0.6 },
             });
 
-            alert("✅ Recebimento registrado e enviado para o Fiscal!");
+            toast.success(`✅ Recebimento concluído por ${usuario}!`);
             fetchRecebimentos();
         } catch (erro) {
             console.error("❌ Erro ao atualizar recebimento:", erro);
-            alert("❌ Erro ao registrar recebimento.");
+            toast.error("❌ Erro ao registrar recebimento.");
         }
     };
 
@@ -81,53 +91,55 @@ const ConsultarRecebimentos = () => {
                             border: "1px solid #ccc"
                         }}
                     >
-
                         <h3>Registro: {item.id}</h3>
-
                         <p><strong>Solicitante:</strong> {item.usuario}, {item.categoria}</p>
                         <p><strong>Origem do Item:</strong> {item.origem}</p>
                         <p><strong>Destino do Item:</strong> {item.destino}</p>
-                        {/* <p><strong>Loja:</strong> {item.loja}</p> */}
-                        <p><strong>Status Geral:</strong> {item.status}</p>
+
+                        <p>
+                            <strong>Status Geral:</strong>{" "}
+                            <span style={{ fontWeight: "bold", color: "green" }}>
+                                {item.status}
+                            </span>
+                            {item.status === "Recebimento Concluído" && (
+                                <>
+                                    {" "} - <strong>Concluído por:</strong> {item.recebidoPorLoja},{" "}
+                                    {item.dataRecebimento
+                                        ? item.dataRecebimento.toDate().toLocaleString("pt-BR")
+                                        : "Sem data"}
+                                </>
+                            )}
+                        </p>
 
                         <p><strong>Motivo:</strong> {item.motivo}</p>
-
                         <p><strong>Código do Produto:</strong> {item.codigoBarras}</p>
                         <p><strong>Descrição do Produto:</strong> {item.produto?.["Denominação do imobilizado"]}</p>
                         <p><strong>Nº Inventário:</strong> {item.produto?.["Nº inventário"]}</p>
                         <p><strong>Empresa:</strong> {item.produto?.Empr}</p>
 
-                        <p><strong>Valor:</strong> R$ {item.valor}</p>
-
-
-                        <p>
-                            <strong>Data Solicitação:</strong>{" "}
+                        <p><strong>Data Solicitação:</strong>{" "}
                             {item.data ? item.data.toDate().toLocaleString("pt-BR") : "Sem data"}
                         </p>
 
-                        <p>
-                            <strong>Aprovado por Supervisor:</strong> {item.statusSupervisor},{" "}
+                        <p><strong>Aprovado por Supervisor:</strong> {item.statusSupervisor},{" "}
                             {item.dataAprovacaoSupervisor
                                 ? item.dataAprovacaoSupervisor.toDate().toLocaleString("pt-BR")
                                 : "Sem data"}
                         </p>
 
-                        <p>
-                            <strong>Aprovado por Operações:</strong> {item.statusOperacoes},{" "}
+                        <p><strong>Aprovado por Operações:</strong> {item.statusOperacoes},{" "}
                             {item.dataAprovacaoOperacoes
                                 ? item.dataAprovacaoOperacoes.toDate().toLocaleString("pt-BR")
                                 : "Sem data"}
                         </p>
 
-                        <p>
-                            <strong>Aprovado por Contábil:</strong> {item.statusContabil},{" "}
+                        <p><strong>Aprovado por Contábil:</strong> {item.statusContabil},{" "}
                             {item.dataAprovacaoContabil
                                 ? item.dataAprovacaoContabil.toDate().toLocaleString("pt-BR")
                                 : "Sem data"}
                         </p>
 
-                        <p>
-                            <strong>Aprovado por Fiscal:</strong> {item.statusFiscal},{" "}
+                        <p><strong>Aprovado por Fiscal:</strong> {item.statusFiscal},{" "}
                             {item.dataAprovacaoFiscal
                                 ? item.dataAprovacaoFiscal.toDate().toLocaleString("pt-BR")
                                 : "Sem data"}
@@ -150,7 +162,7 @@ const ConsultarRecebimentos = () => {
                                 item.nomeDocumento || "Nenhum documento"
                             )}
                         </p>
-                        {/* Botão para registrar recebimento */}
+
                         {item.status !== "Recebimento Concluído" ? (
                             <button
                                 onClick={() => handleRecebimento(item.id)}
@@ -166,17 +178,15 @@ const ConsultarRecebimentos = () => {
                             >
                                 Ok, recebimento realizado
                             </button>
-                        ) : (
-                            <p style={{ fontWeight: "bold", color: "blue", marginTop: 10 }}>
-                                ✅ Recebimento Concluído
-                            </p>
-                        )}
+                        ) : null}
 
                         <hr style={{ marginTop: 15 }} />
                     </div>
                 ))
             )}
-        </div >
+
+            <ToastContainer position="top-right" autoClose={3000} />
+        </div>
     );
 };
 

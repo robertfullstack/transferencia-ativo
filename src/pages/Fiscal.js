@@ -178,17 +178,30 @@ const Fiscal = () => {
             <p><strong>Motivo:</strong> {sol.motivo || "—"}</p>
             <p><strong>Valor:</strong> R$ {sol.valor || "—"}</p>
 
-            <p>
+            {/* <p>
               <strong>Status Geral:</strong>{" "}
               <span style={{ fontWeight: "bold", color: "green" }}>{sol.status}</span>
-            </p>
+            </p> */}
 
-            {/* Mostra se a loja já concluiu */}
-            {sol.statusLoja === "Concluída" && (
-              <p style={{ color: "blue", fontWeight: "bold" }}>
-                ✅ Pedido concluído pela loja
+            {/* 🔹 Se houver aprovação fiscal */}
+            {sol.statusFiscal === "Aprovado" && sol.dataAprovacaoFiscal && sol.aprovadoPorFiscal && (
+              <p style={{ fontStyle: "italic", color: "#555", marginTop: 4 }}>
+                Concluído por: {sol.aprovadoPorFiscal},{" "}
+                {sol.dataAprovacaoFiscal.toDate().toLocaleString("pt-BR")}
               </p>
             )}
+
+            <p>
+              <strong>Status Geral:</strong>{" "}
+              {sol.statusLoja !== "" && sol.recebidoPorLoja ? (
+                <span style={{ fontWeight: "bold", color: "blue" }}>
+                  Recebimento Concluído - Concluído por: {sol.recebidoPorLoja},{" "}
+                  {sol.dataRecebimento ? sol.dataRecebimento.toDate().toLocaleString("pt-BR") : ""}
+                </span>
+              ) : (
+                <span style={{ fontWeight: "bold", color: "green" }}>{sol.status}</span>
+              )}
+            </p>
 
             <hr style={{ margin: "15px 0" }} />
 
