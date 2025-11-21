@@ -159,7 +159,7 @@ export default function Login() {
           }}
         />
         <div>Controle de Ativos - Transferência de Ativos</div>
-        <div>Versão 1.8 - 17/11/2025</div>
+        <div>Versão 1.9 - 21/11/2025</div>
       </div>
     </>
   );
